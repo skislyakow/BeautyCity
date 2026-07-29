@@ -3,3 +3,4 @@ python-dotenv>=1.0
 gunicorn>=22.0
 Pillow>=10.0
 requests>=2.31
+yookassa>=3.0
