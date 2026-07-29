@@ -78,3 +78,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', '')
+YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', '')
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
