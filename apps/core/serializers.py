@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import serializers
 from .models import Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon, WorkShift, Booking, PromoCode
 from .slots import get_available_slots
@@ -61,6 +62,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         specialist = data.get('specialist')
         salon = data.get('salon')
+        procedure = data.get('procedure')
         start_at = data.get('start_at')
 
         if not specialist:
@@ -72,17 +74,31 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         if not start_at:
             raise serializers.ValidationError(f"Время не указано")
 
-        if not specialist.salons.filter(id=salon.id).exists():
+        if not specialist.salons.filter(salon=salon).exists():
             raise serializers.ValidationError(
                 f"Мастер {specialist.full_name} не работает в салоне {salon.name}")
 
         date = start_at.date()
         time = start_at.time()
 
-        slots = get_available_slots(salon=salon, specialist=specialist, procedure=data.get('procedure'),
+        slots = get_available_slots(salon=salon, specialist=specialist, procedure=procedure,
                                     date=date)
 
         if time not in slots:
             raise serializers.ValidationError(f"Время {time} уже занято")
+
+        offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
+        if not offering:
+            raise serializers.ValidationError(
+                f"Услуга {procedure} не оказывается в салоне {salon}")
+
+        data['price_original'] = offering.price
+
+        promo = data.get('promo_code')
+        if promo and promo.is_active:
+            discount = Decimal(promo.discount_percent) / Decimal(100)
+            data['price_final'] = offering.price * (Decimal(1) - discount)
+        else:
+            data['price_final'] = offering.price
 
         return data
