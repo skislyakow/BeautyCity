@@ -1,186 +1,255 @@
-# BeautyCity —模型参考
+# BeautyCity API
 
-Всё в одном приложении `apps.core`. 11 моделей, описание полей и связей — чтобы было понятно, с чем работать во вьюхах и бизнес-логике.
-
----
-
-## Salon — Салон
-
-| Поле | Тип | Описание |
-|---|---|---|
-| name | CharField(200) | Название |
-| address | CharField(300) | Адрес |
-| phone | CharField(20) | Телефон салона |
-| image | FileField(upload_to='salons/') | Фото (svg/png/jpg/webp) |
-| is_active | BooleanField(default=True) | Активен |
+Базовый URL: `http://localhost:8000/api/`
 
 ---
 
-## Procedure — Услуга/процедура
+## Салоны
 
-| Поле | Тип | Описание |
-|---|---|---|
-| title | CharField(200) | Название |
-| description | TextField | Описание |
-| duration_minutes | PositiveIntegerField(default=60) | Длительность в минутах |
-| base_price | DecimalField(10, 2) | Базовая цена |
-| image | FileField(upload_to='procedures/') | Фото |
+### Список салонов
 
----
+```
+GET /api/salons/
+```
 
-## ProcedureOffering — Услуга в салоне (цена по салонам)
+```json
+[
+  {
+    "id": 1,
+    "name": "BeautyCity Пушкинская",
+    "address": "ул. Пушкинская, д. 78А",
+    "phone": "+79179023800",
+    "image": "/media/salons/salon1.svg",
+    "is_active": true
+  }
+]
+```
 
-| Поле | Тип | Описание |
-|---|---|---|
-| salon | FK → Salon | Салон |
-| procedure | FK → Procedure | Услуга |
-| price | DecimalField(10, 2) | Цена в этом салоне |
+### Услуги салона
 
-**constraints:** `unique(salon, procedure)`
+```
+GET /api/salons/<id>/procedures/
+```
 
----
+### Мастера салона
 
-## Specialist — Мастер
-
-| Поле | Тип | Описание |
-|---|---|---|
-| full_name | CharField(200) | ФИО |
-| photo | FileField(upload_to='specialists/') | Фото |
-| bio | TextField | Специальность / описание |
-| experience | TextField | Стаж работы |
-| is_active | BooleanField(default=True) | Активен |
-| procedures | ManyToManyField → Procedure | Какие услуги делает |
+```
+GET /api/salons/<id>/specialists/
+```
 
 ---
 
-## SpecialistSalon — Мастер → Салон (M2M)
+## Услуги
 
-| Поле | Тип | Описание |
-|---|---|---|
-| specialist | FK → Specialist | Мастер |
-| salon | FK → Salon | Салон |
+### Все услуги
 
-**constraints:** `unique(specialist, salon)`
+```
+GET /api/procedures/
+```
 
----
+```json
+[
+  {
+    "id": 1,
+    "title": "Маникюр. Классический. Гель",
+    "description": "",
+    "duration_minutes": 60,
+    "base_price": "2000.00",
+    "image": "/media/procedures/service2.svg"
+  }
+]
+```
 
-## WorkShift — Смена / расписание мастера
+### Цены на услуги по салонам
 
-| Поле | Тип | Описание |
-|---|---|---|
-| salon | FK → Salon | Салон |
-| specialist | FK → Specialist | Мастер |
-| date | DateField | Дата |
-| start_time | TimeField | Начало смены |
-| end_time | TimeField | Конец смены |
+```
+GET /api/procedure-offerings/
+```
 
-**constraints:** `unique(salon, specialist, date, start_time, end_time)`
-
----
-
-## PromoCode — Промокод
-
-| Поле | Тип | Описание |
-|---|---|---|
-| code | CharField(30, unique) | Код (kid20, birthday, man10) |
-| description | CharField(300) | Описание |
-| discount_percent | PositiveSmallIntegerField(1-100) | Процент скидки |
-| is_active | BooleanField(default=True) | Активен |
-| valid_from | DateField(nullable) | Начало действия |
-| valid_to | DateField(nullable) | Конец действия |
-
-**Метод:** `is_valid_today(today=None) -> bool` — проверяет активность и даты.
+Возвращает: `id`, `salon`, `procedure`, `price` (вложенные объекты салона и услуги)
 
 ---
 
-## Booking — Запись (главная модель)
+## Мастера
 
-| Поле | Тип | Описание |
-|---|---|---|
-| salon | FK → Salon | Салон |
-| procedure | FK → Procedure | Услуга |
-| specialist | FK → Specialist(nullable) | Мастер |
-| customer_name | CharField(120) | Имя клиента |
-| phone | CharField(20) | Телефон (+7XXXXXXXXXX) |
-| question | CharField(300, nullable) | Вопрос / комментарий |
-| start_at | DateTimeField | Начало |
-| end_at | DateTimeField | Конец |
-| promo_code | FK → PromoCode(nullable) | Промокод |
-| price_original | DecimalField(10, 2) | Цена без скидки |
-| price_final | DecimalField(10, 2) | Цена со скидкой |
-| source | CharField(choices: web/phone) | Источник |
-| status | CharField(choices: new/confirmed/canceled) | Статус |
-| payment_id | CharField(100, blank) | ID платежа |
-| created_at | DateTimeField(auto_now_add) | Создана |
+### Список мастеров (с фильтрами)
 
-**indexes:** `(salon, start_at)`, `(specialist, start_at)`, `(phone, start_at)`
+```
+GET /api/specialists/?salon=1&procedure=2
+```
 
-**property:** `discount_percent` — возвращает процент скидки из промокода
+Оба фильтра опциональны. Без них — все мастера.
+
+```json
+[
+  {
+    "id": 1,
+    "full_name": "Елизавета Лапина",
+    "photo": "/media/specialists/1.svg",
+    "bio": "Мастер маникюра",
+    "experience": "3 г. 10 мес.",
+    "is_active": true,
+    "procedures": [
+      {
+        "id": 2,
+        "title": "Маникюр. Классический. Гель",
+        "description": "",
+        "duration_minutes": 60,
+        "base_price": "2000.00",
+        "image": "/media/procedures/service2.svg"
+      }
+    ]
+  }
+]
+```
+
+### Услуги мастера
+
+```
+GET /api/specialists/<id>/procedures/
+```
+
+### Салоны мастера
+
+```
+GET /api/specialists/<id>/salons/
+```
 
 ---
 
-## CustomerProfile — Профиль клиента
+## Слоты (свободное время)
 
-| Поле | Тип | Описание |
-|---|---|---|
-| user | OneToOneField → User | Связь с Django User |
-| phone | CharField(20) | Телефон |
-| created_at | DateTimeField(auto_now_add) | Дата регистрации |
+```
+GET /api/slots/?salon=1&specialist=1&procedure=2&date=2026-08-01
+```
+
+Все параметры обязательны.
+
+```json
+{
+  "slots": ["10:00", "10:30", "12:00", "12:30", "15:00", "16:30", "17:00", "18:30", "19:00"]
+}
+```
+
+Учитывает: расписание мастера (WorkShift), занятые записи (Booking), длительность процедуры (Procedure.duration_minutes), шаг 30 минут, текущее время (прошедшие слоты не возвращаются).
 
 ---
 
-## ConsentDocument / ConsentAcceptance — Согласия
+## Записи (Booking)
 
-### ConsentDocument
-| Поле | Тип |
+### Создать запись
+
+```
+POST /api/bookings/
+Content-Type: application/json
+
+{
+  "salon": 1,
+  "procedure": 2,
+  "specialist": 1,
+  "customer_name": "Алиса",
+  "phone": "+79998887766",
+  "question": "Хочу яркий цвет",
+  "start_at": "2026-08-01T15:00:00+03:00",
+  "end_at": "2026-08-01T16:00:00+03:00",
+  "promo_code": null
+}
+```
+
+Поля: `salon`, `procedure`, `specialist`, `customer_name`, `phone`, `question`, `start_at`, `end_at`, `promo_code` (опционально).
+
+Валидация: мастер работает в салоне, слот свободен.
+
+Успех (201):
+
+```json
+{
+  "id": 1,
+  "customer_name": "Алиса",
+  "phone": "+79998887766",
+  "question": "Хочу яркий цвет",
+  "salon": { ... },
+  "procedure": { ... },
+  "specialist": { ... },
+  "start_at": "2026-08-01T15:00:00+03:00",
+  "end_at": "2026-08-01T16:00:00+03:00",
+  "status": "new",
+  "source": "web",
+  "price_final": "2000.00",
+  "created_at": "2026-07-30T12:00:00+03:00"
+}
+```
+
+### Мои записи
+
+```
+GET /api/my-bookings/?phone=+79998887766
+```
+
+Возвращает записи по номеру телефона, от новых к старым.
+
+---
+
+## Платежи
+
+```
+POST /api/payments/<booking_id>/
+```
+
+Создаёт платёж через ЮKassa, возвращает redirect на страницу оплаты.
+
+---
+
+## Статистика (админка)
+
+```
+GET /api/admin/stats/
+```
+
+```json
+{
+  "total_bookings": 42,
+  "bookings_this_month": 15,
+  "revenue_this_month": 45000.00
+}
+```
+
+---
+
+## HTML-страницы
+
+| URL | Описание |
 |---|---|
-| title | CharField(200) |
-| file | FileField(upload_to='consents/') |
-| is_active | BooleanField |
-| uploaded_at | DateTimeField(auto_now_add) |
-
-### ConsentAcceptance
-| Поле | Тип |
-|---|---|
-| user | FK → User (nullable) |
-| phone | CharField(20) |
-| document | FK → ConsentDocument |
-| accepted_at | DateTimeField(auto_now_add) |
+| `/` | Лендинг |
+| `/service/` | Страница записи |
+| `/service-finally/` | Подтверждение записи |
+| `/notes/` | Мои записи (личный кабинет) |
+| `/dashboard/` | Статистика (админ-панель) |
+| `/admin/` | Django Admin |
 
 ---
 
-## SiteSettings — Настройки сайта (одна запись)
+## Модели (кратко)
 
-| Поле | Тип | Описание |
-|---|---|---|
-| manager_phone | CharField(20) | Телефон менеджера |
+| Модель | Назначение |
+|---|---|
+| `Salon` | Салон красоты |
+| `Procedure` | Услуга/процедура |
+| `ProcedureOffering` | Цена услуги в конкретном салоне |
+| `Specialist` | Мастер |
+| `SpecialistSalon` | Связь мастер → салон |
+| `WorkShift` | Расписание (смена мастера) |
+| `PromoCode` | Промокод (со скидкой) |
+| `Booking` | Запись клиента |
+| `CustomerProfile` | Профиль клиента |
+| `ConsentDocument` | PDF-согласие |
+| `ConsentAcceptance` | Принятие согласия |
+| `SiteSettings` | Настройки (телефон менеджера) |
 
 ---
 
-## Полезные файлы для разработчика
+## Запуск
 
-| Файл | Что даёт |
-|---|---|
-| `apps/core/slots.py` | `get_available_slots(salon, specialist, procedure, date)` — список свободного времени |
-| `apps/core/forms.py` | `BookingForm` — форма записи с валидацией телефона |
-| `apps/core/payment_views.py` | `create_payment()` / `yookassa_webhook()` — оплата через ЮKassa |
-
-## Использование в коде
-
-```python
-from apps.core.models import Salon, Procedure, Booking, PromoCode
-from apps.core.slots import get_available_slots
-from apps.core.forms import BookingForm
-
-# Проверка промокода
-code = PromoCode.objects.filter(code='kid20').first()
-if code and code.is_valid_today():
-    # применяем скидку
-    price_final = price_original * (100 - code.discount_percent) / 100
-
-# Свободные слоты
-slots = get_available_slots(
-    salon=salon, specialist=specialist,
-    procedure=procedure, date=date
-)
+```bash
+.venv\Scripts\python.exe manage.py runserver
 ```
