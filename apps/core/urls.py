@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.core import views
+from apps.core import views, payment_views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -22,4 +22,8 @@ urlpatterns = [
     path('api/my-bookings/', views.my_bookings, name='api_my_bookings'),
     path('api/payments/<int:booking_id>/', views.initiate_payment, name='api_payment'),
     path('api/admin/stats/', views.admin_stats, name='api_admin_stats'),
+
+    # Платежи (ЮKassa)
+    path('yookassa-webhook/', payment_views.yookassa_webhook, name='yookassa_webhook'),
+    path('payment-success/', payment_views.payment_success, name='payment_success'),
 ]

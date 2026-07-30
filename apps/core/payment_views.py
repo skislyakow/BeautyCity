@@ -89,7 +89,5 @@ def payment_success(request):
     Страница после успешной оплаты
     URL: /payment-success/
     """
-    return JsonResponse({
-        'success': True,
-        'message': 'Оплата прошла успешно! Спасибо.'
-    })
+    from django.shortcuts import render
+    return render(request, 'service_finally.html', {'payment_success': True})
