@@ -24,10 +24,18 @@
 					<div class="col-2 col-md-2 col-lg-3">
 						<div class="header__block">
 						<button class="header__block_btn">Перезвоните мне</button>
+						{% if request.user.is_authenticated %}
+						<div class="header__block_auth header__block_auth__logged">
+							<img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
+							<span class="header__block_auth__intro">{{ request.user.username }}</span>
+							<a href="#" class="header__block_auth__logout" data-url="{% url 'logout' %}">Выйти</a>
+						</div>
+						{% else %}
 						<div class="header__block_auth">
 							<img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
 							<span class="header__block_auth__intro">Войти</span>
 						</div>
+						{% endif %}
 					</div>
 					</div>
 				</div>

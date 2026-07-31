@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.core import views
+from apps.core import views, phone_auth
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -7,6 +7,11 @@ urlpatterns = [
     path('service-finally/', views.service_finally, name='service_finally'),
     path('notes/', views.notes, name='notes'),
     path('dashboard/', views.admin_panel, name='admin'),
+
+    # Авторизация по телефону (SMS-код заглушка 1234)
+    path('phone-login/', phone_auth.phone_login_view, name='phone_login'),
+    path('phone-confirm/', phone_auth.phone_confirm_view, name='phone_confirm'),
+    path('logout/', phone_auth.logout_view, name='logout'),
 
     # API
     path('api/salons/', views.salon_list, name='api_salons'),

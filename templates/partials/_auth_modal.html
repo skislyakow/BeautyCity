@@ -4,7 +4,8 @@
 	<div class="box-modal_close modal-close">&times;</div>
 		<div class="popup__title authPopup__title">Войти по коду</div>
 		<p class="popup__text authPopup__text">Введите свой номер телефона, мы вышлем на него код</p>
-		<form action="#" class="authPopup__form">
+		<form action="#" method="post" class="authPopup__form" id="phoneLoginForm" data-url="{% url 'phone_login' %}">
+			{% csrf_token %}
 			<div class="contacts__form_inputBlock">
 				<input type="text" name="tel" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required="">
 			</div>
@@ -12,6 +13,7 @@
 				<input type="checkbox" class="contacts__form_checkbox" checked="">
 				<span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
 			</div>
+			<div class="authPopup__error" style="display: none;"></div>
 			<button type="submit" class="popup__btn authPopup__btn">Отправить</button>
 		</form>
 	</div>

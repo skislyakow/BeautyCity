@@ -3,14 +3,19 @@
 <div class="confirmPopup popup box-modal" id="confirmModal">
 	<div class="box-modal_close modal-close">&times;</div>
 		<div class="popup__title confirmPopup__title">Подтвердите номер</div>
-		<p class="popup__text confirmPopup__text">Введите код, полученный по SMS на номер +7 (928) 164 48 60</p>
-		<div class="confirmPopup__number">
-			<input type="text" name="num1" class="tipsPopup__form_inputNum popup__input" placeholder="" required>
-			<input type="text" name="num2" class="tipsPopup__form_inputNum popup__input" placeholder="" required>
-			<input type="text" name="num3" class="tipsPopup__form_inputNum popup__input" placeholder="" required>
-			<input type="text" name="num4" class="tipsPopup__form_inputNum popup__input" placeholder="" required>
-
-		</div>
+		<p class="popup__text confirmPopup__text">Введите код, полученный по SMS на номер <span id="confirmPhone">+7 (000) 000 00 00</span></p>
+		<form action="#" method="post" class="confirmPopup__form" id="phoneConfirmForm" data-url="{% url 'phone_confirm' %}">
+			{% csrf_token %}
+			<div class="confirmPopup__number">
+				<input type="text" name="num1" class="tipsPopup__form_inputNum popup__input" placeholder="" required maxlength="1">
+				<input type="text" name="num2" class="tipsPopup__form_inputNum popup__input" placeholder="" required maxlength="1">
+				<input type="text" name="num3" class="tipsPopup__form_inputNum popup__input" placeholder="" required maxlength="1">
+				<input type="text" name="num4" class="tipsPopup__form_inputNum popup__input" placeholder="" required maxlength="1">
+			</div>
+			<div class="confirmPopup__hint">Подсказка для теста: код 1234</div>
+			<div class="confirmPopup__error" style="display: none;"></div>
+			<button type="submit" class="popup__btn authPopup__btn">Подтвердить</button>
+		</form>
 		<div class="confirmPopup__sms">Если SMS не пришло вы можете <a href="#" class="popup__link">запросить код повторно</a></div>
 		<div class="confirmPopup__changeNumber">
 			<a href="#" class="confirmPopup__link popup__link">Изменить номер телефона</a>

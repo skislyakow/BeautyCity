@@ -376,6 +376,9 @@ $(document).ready(function() {
 	//popup
 	$('.header__block_auth').click(function(e) {
 		e.preventDefault()
+		if ($(this).hasClass('header__block_auth__logged')) {
+			return
+		}
 		$('#authModal').arcticmodal();
 		// $('#confirmModal').arcticmodal();
 
@@ -394,9 +397,74 @@ $(document).ready(function() {
 		$('#tipsModal').arcticmodal();
 	})
 	
-	$('.authPopup__form').submit(function() {
-		$('#confirmModal').arcticmodal();
-		return false
+	// Авторизация: отправка номера телефона
+	$('#phoneLoginForm').submit(function(e) {
+		e.preventDefault()
+		var $form = $(this)
+		var $error = $form.find('.authPopup__error')
+
+		$.ajax({
+			url: $form.attr('data-url') || '/phone-login/',
+			method: 'POST',
+			data: $form.serialize(),
+			success: function(response) {
+				$error.hide()
+				$('#confirmPhone').text(response.phone)
+				$('#confirmModal .confirmPopup__form input[name^="num"]').val('')
+				$.arcticmodal('close')
+				$('#confirmModal').arcticmodal()
+			},
+			error: function(xhr) {
+				var msg = 'Ошибка при отправке. Попробуйте ещё раз.'
+				try {
+					msg = JSON.parse(xhr.responseText).message || msg
+				} catch (e) {}
+				$error.text(msg).show()
+			}
+		})
+	})
+
+	// Авторизация: подтверждение кода
+	$('#phoneConfirmForm').submit(function(e) {
+		e.preventDefault()
+		var $form = $(this)
+		var $error = $form.find('.confirmPopup__error')
+
+		$.ajax({
+			url: $form.attr('data-url') || '/phone-confirm/',
+			method: 'POST',
+			data: $form.serialize(),
+			success: function(response) {
+				$error.hide()
+				$.arcticmodal('close')
+				location.reload()
+			},
+			error: function(xhr) {
+				var msg = 'Неверный код.'
+				try {
+					msg = JSON.parse(xhr.responseText).message || msg
+				} catch (e) {}
+				$error.text(msg).show()
+			}
+		})
+	})
+
+	// Выход
+	$('.header__block_auth__logout').click(function(e) {
+		e.preventDefault()
+		var url = $(this).data('url')
+		$.post(url, function() {
+			location.reload()
+		})
+	})
+
+	// Автопереход между цифрами кода
+	$(document).on('input', '#phoneConfirmForm input[name^="num"]', function() {
+		var $inputs = $(this).closest('.confirmPopup__number').find('input[name^="num"]')
+		var idx = $inputs.index(this)
+		if ($(this).val() && idx < $inputs.length - 1) {
+			$inputs.eq(idx + 1).focus()
+		}
 	})
 
 	//service
