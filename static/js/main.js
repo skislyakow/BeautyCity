@@ -147,8 +147,32 @@ $(document).ready(function() {
 		$('#tipsModal').arcticmodal();
 	});
 
-	$('.authPopup__form').submit(function() {
-		$('#confirmModal').arcticmodal();
-		return false;
+	$('.callbackTriggerBtn').click(function(e) {
+		e.preventDefault();
+		$('#callbackModal').arcticmodal();
+	});
+
+	$('.callbackPopup__form').on('submit', function(e) {
+		e.preventDefault();
+		var $form = $(this);
+		var $error = $form.find('.callbackPopup__error');
+		var $btn = $form.find('button[type="submit"]');
+
+		$error.hide().text('');
+		if (!$form.find('.callbackPopup__agree').prop('checked')) {
+			$error.text('Необходимо согласие с политикой конфиденциальности').show();
+			return;
+		}
+
+		$btn.prop('disabled', true);
+		$.post($form.data('url'), $form.serialize())
+			.done(function() {
+				$form.html('<div class="popup__text">Заявка принята, перезвоним в ближайшее время</div>');
+			})
+			.fail(function(xhr) {
+				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отправить заявку';
+				$error.text(msg).show();
+				$btn.prop('disabled', false);
+			});
 	});
 });
