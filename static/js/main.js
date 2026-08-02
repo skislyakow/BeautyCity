@@ -146,9 +146,4 @@ $(document).ready(function() {
 		e.preventDefault();
 		$('#tipsModal').arcticmodal();
 	});
-
-	$('.authPopup__form').submit(function() {
-		$('#confirmModal').arcticmodal();
-		return false;
-	});
 });
