@@ -72,7 +72,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         if not start_at:
             raise serializers.ValidationError(f"Время не указано")
 
-        if not specialist.salons.filter(id=salon.id).exists():
+        if not specialist.salons.filter(salon=salon).exists():
             raise serializers.ValidationError(
                 f"Мастер {specialist.full_name} не работает в салоне {salon.name}")
 

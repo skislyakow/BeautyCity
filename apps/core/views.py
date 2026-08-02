@@ -139,8 +139,6 @@ def create_booking(request):
         price_original=offering.price,
         price_final=offering.price,
         end_at=end_at,
-        # status='new',  <-- Раскомментируй, если status не имеет default в модели
-        # source='web'   <-- Раскомментируй, если source не имеет default в модели
     )
     return Response(BookingSerializer(booking).data, status=201)
 
@@ -195,9 +193,8 @@ def service_finally(request):
     return render(request, 'serviceFinally.html')
 
 
-@login_required(login_url='/')  # Перенаправляем на главную, если пользователь не авторизован
+@login_required(login_url='/')  #
 def notes(request):
-    """Личный кабинет пользователя"""
     user_phone = request.user.username
     current_time = now()
 
@@ -223,7 +220,6 @@ def notes(request):
 
 @staff_member_required(login_url='/')  # Пускаем только персонал, остальных на главную
 def admin_panel(request):
-    """Панель администратора со статистикой"""
     current_date = now()
 
     bookings_this_month = Booking.objects.filter(

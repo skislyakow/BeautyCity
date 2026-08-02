@@ -1,5 +1,6 @@
 from django.urls import path
 from apps.core import views, phone_auth
+from apps.core.payment_views import create_bulk_payment
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -7,7 +8,8 @@ urlpatterns = [
     path('service-finally/', views.service_finally, name='service_finally'),
     path('notes/', views.notes, name='notes'),
     path('dashboard/', views.admin_panel, name='admin'),
-path('admin-panel/', views.admin_panel, name='admin_panel'),
+    path('admin-panel/', views.admin_panel, name='admin_panel'),
+    path('pay-all-unpaid/', create_bulk_payment, name='pay_all_unpaid'),
 
     # Авторизация по телефону (SMS-код заглушка 1234)
     path('phone-login/', phone_auth.phone_login_view, name='phone_login'),
