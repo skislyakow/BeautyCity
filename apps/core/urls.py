@@ -1,5 +1,6 @@
 from django.urls import path
 from apps.core import views, phone_auth
+from apps.core.payment_views import create_bulk_payment
 
 urlpatterns = [
     path('', views.index, name='index'),
