@@ -13,6 +13,8 @@ urlpatterns = [
     path('phone-login/', phone_auth.phone_login_view, name='phone_login'),
     path('phone-confirm/', phone_auth.phone_confirm_view, name='phone_confirm'),
     path('logout/', phone_auth.logout_view, name='logout'),
+    path('callback/', views.callback_request, name='callback'),
+    path('callback/<int:pk>/done/', views.callback_done, name='callback_done'),
 
     # API
     path('api/salons/', views.salon_list, name='api_salons'),

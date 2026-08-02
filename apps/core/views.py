@@ -4,9 +4,11 @@ from django.utils.timezone import now
 from django.db.models import Sum, Count
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Salon, Procedure, Specialist, ProcedureOffering, SpecialistSalon, Booking
+from .models import Salon, Procedure, Specialist, ProcedureOffering, SpecialistSalon, Booking, CallbackRequest
 from .serializers import (
     SalonSerializer, ProcedureSerializer, SpecialistSerializer,
     ProcedureOfferingSerializer, BookingCreateSerializer, BookingSerializer
@@ -244,5 +246,35 @@ def admin_panel(request):
         'visits_month': visits_month,
         'visits_year': visits_year,
         'visit_percentage': 100,  # Заглушка, пока не решим, как это считать
+        'callback_requests': CallbackRequest.objects.filter(is_processed=False).order_by('-created_at'),
     }
     return render(request, 'admin.html', context)
+
+
+@require_POST
+def callback_request(request):
+    """Публичная заявка «Перезвоните мне»."""
+    name = request.POST.get('name', '').strip()
+    phone = request.POST.get('phone', '').strip()
+
+    if not phone:
+        return JsonResponse({'status': 'error', 'message': 'Введите номер телефона'}, status=400)
+
+    try:
+        request_obj = CallbackRequest(name=name, phone=phone)
+        request_obj.full_clean()
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': 'Проверьте корректность номера телефона'}, status=400)
+
+    request_obj.save()
+    return JsonResponse({'status': 'ok'})
+
+
+@staff_member_required(login_url='/')
+@require_POST
+def callback_done(request, pk):
+    """Пометить заявку обработанной (только для персонала)."""
+    request_obj = get_object_or_404(CallbackRequest, pk=pk)
+    request_obj.is_processed = True
+    request_obj.save(update_fields=['is_processed'])
+    return JsonResponse({'status': 'ok'})

@@ -1,0 +1,23 @@
+{% load static %}
+<div style="display: none;">
+<div class="authPopup popup box-modal" id="callbackModal">
+	<div class="box-modal_close modal-close">&times;</div>
+		<div class="popup__title authPopup__title">Перезвоните мне</div>
+		<p class="popup__text authPopup__text">Оставьте контакты, и мы перезвоним в ближайшее время</p>
+		<form action="#" method="post" class="callbackPopup__form" data-url="{% url 'callback' %}">
+			{% csrf_token %}
+			<div class="contacts__form_inputBlock">
+				<input type="text" name="name" class="contacts__form_iunput" placeholder="Ваше имя">
+			</div>
+			<div class="contacts__form_inputBlock">
+				<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required="">
+			</div>
+			<div class="contacts__form_checkboxBlock fic">
+				<input type="checkbox" class="contacts__form_checkbox callbackPopup__agree" checked="">
+				<span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
+			</div>
+			<div class="callbackPopup__error authPopup__error" style="display: none;"></div>
+			<button type="submit" class="popup__btn authPopup__btn">Жду звонка</button>
+		</form>
+	</div>
+</div>

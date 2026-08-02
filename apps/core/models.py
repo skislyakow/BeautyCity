@@ -288,3 +288,20 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return "Настройки сайта"
+
+
+class CallbackRequest(models.Model):
+    """Заявка на обратный звонок (кнопка «Перезвоните мне»)."""
+
+    name = models.CharField("Имя", max_length=100, blank=True)
+    phone = models.CharField("Телефон", max_length=20, validators=[phone_validator])
+    is_processed = models.BooleanField("Обработано", default=False)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Заявка на звонок"
+        verbose_name_plural = "Заявки на звонок"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name or 'Без имени'} — {self.phone}"

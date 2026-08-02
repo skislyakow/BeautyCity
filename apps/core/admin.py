@@ -5,7 +5,7 @@ from .models import (
     Salon, Procedure, ProcedureOffering,
     Specialist, SpecialistSalon, WorkShift,
     PromoCode, ConsentDocument, ConsentAcceptance,
-    CustomerProfile, Booking, SiteSettings
+    CustomerProfile, Booking, SiteSettings, CallbackRequest
 )
 
 
@@ -135,3 +135,11 @@ class BookingAdmin(admin.ModelAdmin):
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
     list_display = ("manager_phone",)
+
+
+@admin.register(CallbackRequest)
+class CallbackRequestAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "is_processed", "created_at")
+    list_filter = ("is_processed",)
+    search_fields = ("name", "phone")
+    date_hierarchy = "created_at"
