@@ -1,4 +1,5 @@
 from django.contrib.auth import login, logout
+from django.shortcuts import redirect
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -50,7 +51,6 @@ def phone_confirm_view(request):
     return JsonResponse({'status': 'ok', 'phone': user.username})
 
 
-@require_POST
 def logout_view(request):
     logout(request)
-    return JsonResponse({'status': 'ok'})
+    return redirect('index')

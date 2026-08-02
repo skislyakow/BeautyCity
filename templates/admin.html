@@ -5,92 +5,98 @@
 
 {% block content %}
 <section id="admin">
-		<div class="container">
-			<div class="admin">
-				<div class="row">
-					<div class="col-md-2 dec">
-						<div class="accaunt__left">
-							<div class="accaunt__ava fic">
-								<img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
-								<span class="accaunt__ava_name">Администратор</span>
-							</div>
-							<div class="accaunt__settings fic">
-								<a href="#" class="accaunt__settings_intro">Изменить профиль</a>
-								<a href="#" class="accaunt__settings_out">Выйти</a>
-							</div>
-							<nav>
-								<div class="accaunt__menu_title">МЕНЮ</div>
-								<ul class="accaunt__menu">
-									<li class="accaunt__menu_item active">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/list.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Мои записи</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/settings.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Настройки</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/tex.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Тех. поддержка</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/pay.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Платежи</span>
-											</div>	
-										</a>
-									</li>
-								</ul>
-							</nav>
-						</div>
-					</div>
-					<div class="col-md-9">
-						<div class="admin__main">
-							<div class="admin__title">Главная</div>
-							<hr class="hr">
-							<div class="admin__main_block">
-								<div class="admin__main_block__items">
-									<div class="admin__main_monthPrise admin__main_block__elem">
-										<div class="admin__main_monthPrise__intro">Сумма оплат за месяц</div>	
-										<div class="admin__main_monthPrise__sum">628 200 рублей</div>
-									</div>
-									<div class="admin__main_block__elem">
-										<div class="admin__main_monthPrise__intro">Посещений за месяц</div>	
-										<div class="admin__main_monthPrise__sum">349</div>
-									</div>
-								</div>
-								<div class="admin__main_block__items">
-									<div class="admin__main_block__elem">
-										<div class="admin__main_monthPrise__intro">Посещений за месяц</div>	
-										<div class="admin__main_monthPrise__sum">349</div>
-									</div>
-									<div class="admin__main_block__elem">
-										<div class="admin__main_monthPrise__intro">Процент посещений</div>	
-										<div class="admin__main_monthPrise__circle">100%</div>
-									</div>
-									<div class="admin__main_block__elem">
-										<div class="admin__main_monthPrise__intro">Посещений за год</div>	
-										<div class="admin__main_monthPrise__sum">3 956</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+  <div class="container">
+    <div class="admin">
+      <div class="row">
+        <!-- Боковое меню -->
+        <div class="col-md-2 dec">
+          <div class="accaunt__left">
+            <div class="accaunt__ava fic">
+              <img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
+              <span class="accaunt__ava_name">{{ request.user.username|default:"Администратор" }}</span>
+            </div>
+            <div class="accaunt__settings fic">
+              <a href="#" class="accaunt__settings_intro">Изменить профиль</a>
+              <a href="{% url 'logout' %}" class="accaunt__settings_out">Выйти</a>
+            </div>
+            <nav>
+              <div class="accaunt__menu_title">МЕНЮ</div>
+              <ul class="accaunt__menu">
+                <li class="accaunt__menu_item active">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/list.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Мои записи</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/settings.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Настройки</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/tex.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Тех. поддержка</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/pay.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Платежи</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Основной контент со статистикой -->
+        <div class="col-md-9">
+          <div class="admin__main">
+            <div class="admin__title">Главная</div>
+            <hr class="hr">
+            <div class="admin__main_block">
+              <!-- Верхний ряд метрик -->
+              <div class="admin__main_block__items">
+                <div class="admin__main_monthPrise admin__main_block__elem">
+                  <div class="admin__main_monthPrise__intro">Сумма оплат за месяц</div>
+                  <div class="admin__main_monthPrise__sum">{{ payments_month }} рублей</div>
+                </div>
+                <div class="admin__main_block__elem">
+                  <div class="admin__main_monthPrise__intro">Посещений за месяц</div>
+                  <div class="admin__main_monthPrise__sum">{{ visits_month }}</div>
+                </div>
+              </div>
+
+              <!-- Нижний ряд метрик -->
+              <div class="admin__main_block__items">
+                <div class="admin__main_block__elem">
+                  <div class="admin__main_monthPrise__intro">Посещений за месяц</div>
+                  <div class="admin__main_monthPrise__sum">{{ visits_month }}</div>
+                </div>
+                <div class="admin__main_block__elem">
+                  <div class="admin__main_monthPrise__intro">Процент посещений</div>
+                  <div class="admin__main_monthPrise__circle">{{ visit_percentage }}%</div>
+                </div>
+                <div class="admin__main_block__elem">
+                  <div class="admin__main_monthPrise__intro">Посещений за год</div>
+                  <div class="admin__main_monthPrise__sum">{{ visits_year }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

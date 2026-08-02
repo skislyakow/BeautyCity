@@ -37,11 +37,22 @@
 	{% include 'partials/_tips_modal.html' %}
 	{% include 'partials/_review_modal.html' %}
 
+	{# гарантирует установку csrftoken-куки даже на страницах без обычных форм — нужна для AJAX/fetch POST-запросов #}
+	{% csrf_token %}
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
 	<script src="{% static 'js/air-datepicker.js' %}"></script>
 	<script src="{% static 'js/jquery.arcticmodal-0.3.min.js' %}"></script>
 	<script src="{% static 'js/main.js' %}"></script>
+	<script>
+		window.AUTH_URLS = {
+			requestCode: "{% url 'phone_login' %}",
+			confirmCode: "{% url 'phone_confirm' %}"
+		};
+		window.STATIC_URL = "{% static '' %}";
+	</script>
+	<script src="{% static 'js/auth.js' %}"></script>
 	{% block extra_js %}{% endblock %}
 </body>
 </html>

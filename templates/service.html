@@ -14,83 +14,25 @@
                 <h1 class="service__title">Запись на услугу</h1>
                 <button class="service__btn btn">Запись по телефону</button>
             </div>
-            <form action="#" class="service__form">
+            <form action="#" class="service__form" onsubmit="return false;">
                 <div class="service__form_block service__salons">
-                    <button class="accordion">(Выберите салон)</button>
+                    <button type="button" class="accordion" id="salonAccordionBtn">(Выберите салон)</button>
                     <div class="panel">
-                        <div class="accordion__block fic">
-                            <div class="accordion__block_intro">BeautyCity Пушкинская</div>
-                            <div class="accordion__block_address">ул. Пушкинская, д. 78А</div>
-                        </div>
-                        <div class="accordion__block fic">
-                            <div class="accordion__block_intro">BeautyCity Ленина</div>
-                            <div class="accordion__block_address">ул. Ленина, д. 211</div>
-                        </div>
-                        <div class="accordion__block fic">
-                            <div class="accordion__block_intro">BeautyCity Красная</div>
-                            <div class="accordion__block_address">ул. Красная, д. 10</div>
+                        <div id="salonsList">
+                            <p class="js-loading">Загрузка салонов...</p>
                         </div>
                     </div>
                 </div>
                 <div class="service__form_block service__services">
-                    <button class="accordion">(Выберите услугу)</button>
+                    <button type="button" class="accordion" id="procedureAccordionBtn" disabled>(Сначала выберите салон)</button>
                     <div class="panel">
-                        <button class="accordion">Парикмахерские услуги</button>
-                        <div class="panel">
-                            <div class="accordion__block_items">
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Окрашивание волос</div>
-                                    <div class="accordion__block_item_address">5 000 ₽</div>
-                                </div>
-
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Укладка волос</div>
-                                    <div class="accordion__block_item_address">1 500 ₽</div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="accordion">Ногтевой сервис</button>
-                        <div class="panel">
-                            <div class="accordion__block_items">
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Маникюр. Классический</div>
-                                    <div class="accordion__block_item_address">1 400 ₽</div>
-                                </div>
-
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Педикюр</div>
-                                    <div class="accordion__block_item_address">1 400 ₽</div>
-                                </div>
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Наращивание ногтей</div>
-                                    <div class="accordion__block_item_address">1 400 ₽</div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="accordion">Макияж</button>
-                        <div class="panel">
-                            <div class="accordion__block_items">
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Дневной макияж</div>
-                                    <div class="accordion__block_item_address">1 400 ₽</div>
-                                </div>
-
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Свадебный макияж</div>
-                                    <div class="accordion__block_item_address">3 000 ₽</div>
-                                </div>
-                                <div class="accordion__block_item fic">
-                                    <div class="accordion__block_item_intro">Вечерний макияж</div>
-                                    <div class="accordion__block_item_address">2 000 ₽</div>
-                                </div>
-                            </div>
-
-                        </div>
+                        <div id="proceduresList"></div>
                     </div>
                 </div>
                 <div class="service__form_block service__masters">
-                    <button class="accordion">(Выберите мастера)</button>
+                    <button type="button" class="accordion" id="specialistAccordionBtn" disabled>(Сначала выберите услугу)</button>
                     <div class="panel">
+                        <div id="specialistsList"></div>
                     </div>
                 </div>
             </form>
@@ -107,31 +49,8 @@
                         <div id="datepickerHere"></div>
                     </div>
                     <div class="col-md-8">
-                        <div class="time__elems">
-                            <div class="time__items">
-                                <div class="time__elems_intro">Утро</div>
-                                <div class="time__elems_elem fic">
-                                    <button data-time="10:00" class="time__elems_btn">10:00</button>
-                                    <button data-time="10:30" class="time__elems_btn">10:30</button>
-                                </div>
-                            </div>
-                            <div class="time__items">
-                                <div class="time__elems_intro">День</div>
-                                <div class="time__elems_elem fic">
-                                    <button data-time="12:00" class="time__elems_btn">12:00</button>
-                                    <button data-time="12:30" class="time__elems_btn">12:30</button>
-                                    <button data-time="15:00" class="time__elems_btn">15:00</button>
-                                    <button data-time="16:30" class="time__elems_btn">16:30</button>
-                                </div>
-                            </div>
-                            <div class="time__items">
-                                <div class="time__elems_intro">Вечер</div>
-                                <div class="time__elems_elem fic">
-                                    <button data-time="17:00" class="time__elems_btn">17:00</button>
-                                    <button data-time="18:30" class="time__elems_btn">18:30</button>
-                                    <button data-time="19:00" class="time__elems_btn">19:00</button>
-                                </div>
-                            </div>
+                        <div class="time__elems" id="timeSlotsContainer">
+                            <p class="js-loading">Сначала выберите салон, услугу и мастера</p>
                         </div>
                     </div>
                 </div>
@@ -139,7 +58,7 @@
             <div class="time__btns">
                 <div class="row">
                     <div class="col-md-12">
-                        <button  class="time__btns_next">Далее</button>
+                        <button type="button" id="nextBtn" class="time__btns_next" disabled>Далее</button>
                         <a href="{% url 'index' %}"><button type="button" class="time__btns_home">На главную</button></a>
                     </div>
                 </div>
@@ -147,4 +66,8 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/service_booking.js' %}"></script>
 {% endblock %}

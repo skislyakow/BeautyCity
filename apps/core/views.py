@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
+from django.utils.timezone import now
 from django.db.models import Sum, Count
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Salon, Procedure, Specialist, ProcedureOffering, SpecialistSalon, Booking
@@ -10,6 +13,7 @@ from .serializers import (
 )
 from .payment_views import create_payment
 from .slots import get_available_slots
+from datetime import timedelta
 
 
 @api_view(['GET'])
@@ -28,14 +32,17 @@ def procedure_list(request):
 
 @api_view(['GET'])
 def specialist_list(request):
-    specialists = Specialist.objects.all()
+    specialists = Specialist.objects.filter(is_active=True)
+
     procedure_id = request.GET.get('procedure')
     if procedure_id:
         specialists = specialists.filter(procedures__id=procedure_id)
+
     salon_id = request.GET.get('salon')
     if salon_id:
-        specialists = specialists.filter(salons__salon_id=salon_id)
-    specialists = specialists.filter(is_active=True)
+        specialists = specialists.filter(salons__salon=salon_id)
+
+    specialists = specialists.distinct()
     serializer = SpecialistSerializer(specialists, many=True)
     return Response(serializer.data)
 
@@ -115,9 +122,26 @@ def available_slots(request):
 def create_booking(request):
     data = request.data
     serializer = BookingCreateSerializer(data=data)
+
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
-    booking = serializer.save()
+
+    salon = serializer.validated_data.get('salon')
+    procedure = serializer.validated_data.get('procedure')
+    start_at = serializer.validated_data.get('start_at')
+
+    offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
+    if not offering:
+        return Response({'error': 'Данная услуга не предоставляется в выбранном салоне'}, status=400)
+    end_at = start_at + timedelta(minutes=procedure.duration_minutes)
+
+    booking = serializer.save(
+        price_original=offering.price,
+        price_final=offering.price,
+        end_at=end_at,
+        # status='new',  <-- Раскомментируй, если status не имеет default в модели
+        # source='web'   <-- Раскомментируй, если source не имеет default в модели
+    )
     return Response(BookingSerializer(booking).data, status=201)
 
 
@@ -171,11 +195,54 @@ def service_finally(request):
     return render(request, 'serviceFinally.html')
 
 
+@login_required(login_url='/')  # Перенаправляем на главную, если пользователь не авторизован
 def notes(request):
-    """Личный кабинет"""
-    return render(request, 'notes.html')
+    """Личный кабинет пользователя"""
+    user_phone = request.user.username
+    current_time = now()
+
+    upcoming_bookings = Booking.objects.filter(
+        phone=user_phone,
+        start_at__gte=current_time
+    ).exclude(status='canceled').order_by('start_at')  # Если статус хранится через Choices, используй Booking.Status.CANCELED
+
+    past_bookings = Booking.objects.filter(
+        phone=user_phone,
+        start_at__lt=current_time
+    ).exclude(status='canceled').order_by('-start_at')
+
+    unpaid_sum = sum(b.price_final for b in upcoming_bookings if b.status != 'confirmed')
+
+    context = {
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings,
+        'unpaid_sum': unpaid_sum,
+    }
+    return render(request, 'notes.html', context)
 
 
+@staff_member_required(login_url='/')  # Пускаем только персонал, остальных на главную
 def admin_panel(request):
-    """Админ-панель"""
-    return render(request, 'admin.html')
+    """Панель администратора со статистикой"""
+    current_date = now()
+
+    bookings_this_month = Booking.objects.filter(
+        start_at__year=current_date.year,
+        start_at__month=current_date.month
+    ).exclude(status='canceled')
+    payments_month_dict = bookings_this_month.filter(status='confirmed').aggregate(Sum('price_final'))
+    payments_month = payments_month_dict['price_final__sum'] or 0
+
+    visits_month = bookings_this_month.count()
+
+    visits_year = Booking.objects.filter(
+        start_at__year=current_date.year
+    ).exclude(status='canceled').count()
+
+    context = {
+        'payments_month': payments_month,
+        'visits_month': visits_month,
+        'visits_year': visits_year,
+        'visit_percentage': 100,  # Заглушка, пока не решим, как это считать
+    }
+    return render(request, 'admin.html', context)

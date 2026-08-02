@@ -15,46 +15,25 @@
 						<div class="service__block">
 							<h1 class="service__title">Запись на услугу</h1>
 						</div>
-						<form action="#" class="serviceFinally__form">
-							<div class="serviceFinally__form_block">
-								<div class="serviceFinally__form_header fic">
-									<span class="serviceFinally__form_header__number">Запись №32985</span>
-									<div class="serviceFinally__form_header__item fic">
-										<div class="serviceFinally__form_header__service">BeautyCity Пушкинская</div>
-										<div class="serviceFinally__form_header__address">ул. Пушкинская, д. 78А</div>
-									</div>
-								</div>
-								<div class="serviceFinally__form_content">
-									<div class="serviceFinally__form_content__block fic">
-										<div class="serviceFinally__form_content__title">Дневной макияж</div>
-										<div class="serviceFinally__form_content__price">750 ₽</div>
-									</div>
-									<div class="serviceFinally__form_content__block fic">
-										<div class="serviceFinally__form_content__items fic">
-										  	<img src="{% static 'img/masters/avatar/vizajist1.svg' %}" alt="avatar" class="accordion__block_img">
-										  	<div class="accordion__block_master">Елена Грибнова</div>
-									    </div>
-									    <div class="serviceFinally__form_content__item fic">
-											<div class="serviceFinally__form_content__time">16:30</div>
-											<div class="serviceFinally__form_content__date">18 ноября</div>
-										</div>
-									</div>
-								</div>
-							</div>
+						<div id="bookingSummary">
+							<p class="js-loading">Загрузка данных записи...</p>
+						</div>
+						<form id="bookingForm" class="serviceFinally__form" style="display:none;">
 							<div class="serviceFinally__form_itesm">
 								<div class="contacts__form_block fic">
-									<input type="text" name="fname" class="contacts__form_iunput" placeholder="Введите имя" required="">
+									<input type="text" name="customer_name" class="contacts__form_iunput" placeholder="Введите имя" required>
 									<div class="contacts__form_inputBlock">
-										<input type="text" name="tel" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required="">
+										<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required>
 									</div>
 								</div>
-								<textarea name="contactsTextarea" class="contacts__form_textarea" placeholder="Вопрос(необязательно)"></textarea>
+								<textarea name="question" class="contacts__form_textarea" placeholder="Вопрос(необязательно)"></textarea>
 								<div class="contacts__form_checkboxBlock fic">
-									<input type="checkbox" class="contacts__form_checkbox" checked="">
+									<input type="checkbox" class="contacts__form_checkbox" required>
 									<span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
 								</div>
+								<div id="bookingError" style="color:#e74c3c;display:none;margin-bottom:10px;"></div>
 								<button type="submit" class="serviceFinallys__form_btn">Записаться</button>
-								<button type="submit" class="serviceFinallys__form_back">Назад</button>
+								<a href="{% url 'service' %}"><button type="button" class="serviceFinallys__form_back">Назад</button></a>
 							</div>
 						</form>
 					</div>
@@ -65,4 +44,103 @@
 			</div>
 		</div>
 	</section>
+{% endblock %}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
+
+{% block extra_js %}
+<script>
+$(function () {
+	const raw = sessionStorage.getItem('bc_booking_draft');
+	if (!raw) {
+		$('#bookingSummary').html('<p>Данные записи не найдены. <a href="{% url 'service' %}">Вернуться к выбору услуги</a>.</p>');
+		return;
+	}
+	const draft = JSON.parse(raw);
+
+	$('#bookingSummary').html(`
+		<div class="serviceFinally__form_block">
+			<div class="serviceFinally__form_header fic">
+				<div class="serviceFinally__form_header__item fic">
+					<div class="serviceFinally__form_header__service">${draft.salon.name}</div>
+					<div class="serviceFinally__form_header__address">${draft.salon.address}</div>
+				</div>
+			</div>
+			<div class="serviceFinally__form_content">
+				<div class="serviceFinally__form_content__block fic">
+					<div class="serviceFinally__form_content__title">${draft.procedure.title}</div>
+					<div class="serviceFinally__form_content__price">${draft.procedure.base_price} ₽</div>
+				</div>
+				<div class="serviceFinally__form_content__block fic">
+					<div class="serviceFinally__form_content__items fic">
+						<div class="accordion__block_master">${draft.specialist.full_name}</div>
+					</div>
+					<div class="serviceFinally__form_content__item fic">
+						<div class="serviceFinally__form_content__time">${draft.time}</div>
+						<div class="serviceFinally__form_content__date">${draft.date}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	`);
+	$('#bookingForm').show();
+
+	$('#bookingForm').on('submit', function (e) {
+		e.preventDefault();
+		const $error = $('#bookingError').hide().text('');
+		const $submitBtn = $(this).find('button[type="submit"]').prop('disabled', true);
+
+		const startAt = `${draft.date}T${draft.time}:00`;
+		const durationMin = draft.procedure.duration_minutes || 60;
+		const startDate = new Date(`${draft.date}T${draft.time}:00`);
+		const endDate = new Date(startDate.getTime() + durationMin * 60000);
+		const pad = n => String(n).padStart(2, '0');
+		const endAt = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
+
+		$.post('/api/bookings/', {
+			salon: draft.salon.id,
+			procedure: draft.procedure.id,
+			specialist: draft.specialist.id,
+			customer_name: $('input[name="customer_name"]').val(),
+			phone: $('input[name="phone"]').val(),
+			question: $('textarea[name="question"]').val(),
+			start_at: startAt,
+			end_at: endAt,
+		})
+			.done(function () {
+				sessionStorage.removeItem('bc_booking_draft');
+				window.location.href = "{% url 'notes' %}";
+			})
+			.fail(function (xhr) {
+				let msg = 'Не удалось создать запись.';
+				if (xhr.responseJSON) {
+					msg = Object.values(xhr.responseJSON).flat().join(' ');
+				}
+				$error.text(msg).show();
+				$submitBtn.prop('disabled', false);
+			});
+	});
+});
+</script>
 {% endblock %}

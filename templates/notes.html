@@ -5,256 +5,219 @@
 
 {% block content %}
 <section id="notes">
-		<div class="container">
-			<div class="notes">
-				<div class="row">
-					<div class="col-md-2">
-						<div class="accaunt__left">
-							<div class="accaunt__ava fic">
-								<img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
-								<span class="accaunt__ava_name">Алиса И.</span>
-							</div>
-							<div class="accaunt__settings fic">
-								<a href="#" class="accaunt__settings_intro">Изменить профиль</a>
-								<a href="#" class="accaunt__settings_out">Выйти</a>
-							</div>
-							<nav>
-								<div class="accaunt__menu_title">МЕНЮ</div>
-								<ul class="accaunt__menu">
-									<li class="accaunt__menu_item active">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/list.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Мои записи</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/settings.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Настройки</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/tex.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Тех. поддержка</span>
-											</div>	
-										</a>
-									</li>
-									<li class="accaunt__menu_item">
-										<a href="#" class="accaunt__menu_item__link">
-											<div class="accaunt__menu_block fic">
-												<img src="{% static 'img/icons/pay.svg' %}" alt="icon" class="accaunt__menu_icon">
-												<span class="accaunt__menu_item__link_intro">Платежи</span>
-											</div>	
-										</a>
-									</li>
-								</ul>
-							</nav>
-						</div>
-					</div>
-					<div class="col-md-12 col-lg-7">
-						<div class="notes__main">
-							<div class="notes__title">Мои записи</div>
-							<hr class="hr">
-						</div>
-						<div class="notes__pay mob">
-							<div class="notes__pay_block">
-								<div class="notes__pay_title">Оплата услуг</div>
-								<div class="notes__pay_info">Вы можете оплатить услуги прямо сейчас онлайн или расплатиться  в салоне</div>
-							</div>
-							
-							
-							<div class="notes__pay_block">
-								<div class="notes__pay_intro">Сумма оплаты</div>
-								<div class="notes__pay_sum">3 900 руб</div>
-								<button class="notes__pay_btn">Оплатить онлайн</button>
-							</div>
-						</div>
-						<div class="notes__content notes__content_upcoming">	
-							<div class="notes__main_title">ПРЕДСТОЯЩИЕ</div>
-							<div class="notes__main_block">
-								<img src="{% static 'img/services/service3.svg' %}" alt="service1" class="notes__main_block__img">
-								<div class="notes__main_block__elems">
-									<div class="notes__main_block__header fic">
-										<div class="notes__main_block__header__itesm fic">
-											<div class="notes__main_number">Запись №23184</div>
-											<div class="notes__main_address">ул. Пушкинская, д. 78А</div>
-										</div>
-										<div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
-									</div>
-									<div class="notes__main_block__main ">
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Дневной макияж</div>
-												<div class="notes__main_block__main_elems__price otes__main_blockWidth">1 400 руб</div>
-											</div>
-										</div>
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Ева Колесова</div>
-												<div class="notes__main_block__main_elems__date otes__main_blockWidth">29 ноября - 13:30 </div>
-											</div>
-										</div>
-									</div>
-									<hr class="notes__block_hr">
-									<div class="notes__footer fic">
-										<a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-										<a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
-										<button class="notes__footer_btn payPopupOpen">Оплатить</button>
-										<div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
-									</div>
-								</div>
-							</div>
-							<div class="notes__main_block">
-								<img src="{% static 'img/services/service1.svg' %}" alt="service1" class="notes__main_block__img">
-								<div class="notes__main_block__elems">
-									<div class="notes__main_block__header fic">
-										<div class="notes__main_block__header__itesm fic">
-											<div class="notes__main_number">Запись №23184</div>
-											<div class="notes__main_address">ул. Пушкинская, д. 78А</div>
-										</div>
-										<div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
-									</div>
-									<div class="notes__main_block__main ">
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Дневной макияж</div>
-												<div class="notes__main_block__main_elems__price otes__main_blockWidth">1 400 руб</div>
-											</div>
-										</div>
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Ева Колесова</div>
-												<div class="notes__main_block__main_elems__date otes__main_blockWidth">29 ноября - 13:30 </div>
-											</div>
-										</div>
-									</div>
-									<hr class="notes__block_hr">
-									<div class="notes__footer fic">
-										<a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-										<a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
-										<button class="notes__footer_btn payPopupOpen">Оплатить</button>
-										<div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
-									</div>
-								</div>
-							</div>
-						</div>
+  <div class="container">
+    <div class="notes">
+      <div class="row">
+        <!-- Боковое меню пользователя -->
+        <div class="col-md-2">
+          <div class="accaunt__left">
+            <div class="accaunt__ava fic">
+              <img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
+              <span class="accaunt__ava_name">{{ request.user.username }}</span>
+            </div>
+            <div class="accaunt__settings fic">
+              <a href="#" class="accaunt__settings_intro">Изменить профиль</a>
+              <a href="{% url 'logout' %}" class="accaunt__settings_out">Выйти</a>
+            </div>
+            <nav>
+              <div class="accaunt__menu_title">МЕНЮ</div>
+              <ul class="accaunt__menu">
+                <li class="accaunt__menu_item active">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/list.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Мои записи</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/settings.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Настройки</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/tex.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Тех. поддержка</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="accaunt__menu_item">
+                  <a href="#" class="accaunt__menu_item__link">
+                    <div class="accaunt__menu_block fic">
+                      <img src="{% static 'img/icons/pay.svg' %}" alt="icon" class="accaunt__menu_icon">
+                      <span class="accaunt__menu_item__link_intro">Платежи</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
 
-						<div class="notes__content notes__content_history">	
-							<div class="notes__main_title">ПРОШЕДШИЕ</div>
-							<div class="notes__main_block">
-								<img src="{% static 'img/services/service1.svg' %}" alt="service1" class="notes__main_block__img">
-								<div class="notes__main_block__elems">
-									<div class="notes__main_block__header fic">
-										<div class="notes__main_block__header__itesm fic">
-											<div class="notes__main_number">Запись №23184</div>
-											<div class="notes__main_address">ул. Пушкинская, д. 78А</div>
-										</div>
-										<div class="notes__main_pay payid">ОПЛАЧЕНО</div>
-									</div>
-									<div class="notes__main_block__main ">
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Дневной макияж</div>
-												<div class="notes__main_block__main_elems__price otes__main_blockWidth">1 400 руб</div>
-											</div>
-										</div>
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Ева Колесова</div>
-												<div class="notes__main_block__main_elems__date otes__main_blockWidth">29 ноября - 13:30 </div>
-											</div>
-										</div>
-									</div>
-									<hr class="notes__block_hr">
-									<div class="notes__footer fic">
-										<a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-										<a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
-										<div class="notes__main_pay payid">ОПЛАЧЕНО</div>
-									</div>
-								</div>
-							</div>
-							<div class="notes__main_block">
-								<img src="{% static 'img/services/service1.svg' %}" alt="service1" class="notes__main_block__img">
-								<div class="notes__main_block__elems">
-									<div class="notes__main_block__header fic">
-										<div class="notes__main_block__header__itesm fic">
-											<div class="notes__main_number">Запись №23184</div>
-											<div class="notes__main_address">ул. Пушкинская, д. 78А</div>
-										</div>
-										<div class="notes__main_pay payid">ОПЛАЧЕНО</div>
-									</div>
-									<div class="notes__main_block__main ">
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Дневной макияж</div>
-												<div class="notes__main_block__main_elems__price otes__main_blockWidth">1 400 руб</div>
-											</div>
-										</div>
-										<div class="notes__main_block__main_items">
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
-												<div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
-											</div>
-											<div class="notes__main_block__main_elems fic">
-												<div class="notes__main_block__main_elems__name otes__main_blockWidth">Ева Колесова</div>
-												<div class="notes__main_block__main_elems__date otes__main_blockWidth">29 ноября - 13:30 </div>
-											</div>
-										</div>
-									</div>
-									<hr class="notes__block_hr">
-									<div class="notes__footer fic">
-										<a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-										<a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
-										<div class="notes__main_pay payid">ОПЛАЧЕНО</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-12 col-lg-3 dec">
-						<div class="notes__pay">
-							<button class="notes__pay_btn">Оплатить онлайн</button>
-							<div class="notes__pay_info">Вы можете оплатить услуги прямо сейчас онлайн или расплатиться  в салоне</div>
-							<div class="notes__pay_intro">Сумма оплаты</div>
-							<div class="notes__pay_sum">3 900 руб</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+        <!-- Основной контент с записями -->
+        <div class="col-md-12 col-lg-7">
+          <div class="notes__main">
+            <div class="notes__title">Мои записи</div>
+            <hr class="hr">
+          </div>
+
+          <!-- Блок оплаты для мобильных устройств -->
+          <div class="notes__pay mob">
+            <div class="notes__pay_block">
+              <div class="notes__pay_title">Оплата услуг</div>
+              <div class="notes__pay_info">Вы можете оплатить услуги прямо сейчас онлайн или расплатиться в салоне</div>
+            </div>
+            <div class="notes__pay_block">
+              <div class="notes__pay_intro">Сумма оплаты</div>
+              <div class="notes__pay_sum">{{ unpaid_sum }} руб</div>
+              {% if unpaid_sum > 0 %}
+              <button class="notes__pay_btn">Оплатить онлайн</button>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- ПРЕДСТОЯЩИЕ ЗАПИСИ -->
+          <div class="notes__content notes__content_upcoming">
+            <div class="notes__main_title">ПРЕДСТОЯЩИЕ</div>
+
+            {% for booking in upcoming_bookings %}
+            <div class="notes__main_block">
+              {% if booking.procedure.image %}
+                <img src="{{ booking.procedure.image.url }}" alt="{{ booking.procedure.title }}" class="notes__main_block__img">
+              {% else %}
+                <img src="{% static 'img/services/service3.svg' %}" alt="service" class="notes__main_block__img">
+              {% endif %}
+
+              <div class="notes__main_block__elems">
+                <div class="notes__main_block__header fic">
+                  <div class="notes__main_block__header__itesm fic">
+                    <div class="notes__main_number">Запись №{{ booking.id }}</div>
+                    <div class="notes__main_address">{{ booking.salon.address }}</div>
+                  </div>
+                  {% if booking.status == 'confirmed' %}
+                    <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
+                  {% else %}
+                    <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
+                  {% endif %}
+                </div>
+                <div class="notes__main_block__main ">
+                  <div class="notes__main_block__main_items">
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
+                    </div>
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.procedure.title }}</div>
+                      <div class="notes__main_block__main_elems__price otes__main_blockWidth">{{ booking.price_final }} руб</div>
+                    </div>
+                  </div>
+                  <div class="notes__main_block__main_items">
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
+                    </div>
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.specialist.full_name }}</div>
+                      <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ booking.start_at|date:"d F - H:i" }} </div>
+                    </div>
+                  </div>
+                </div>
+                <hr class="notes__block_hr">
+                <div class="notes__footer fic">
+                  <a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
+                  <a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
+                  {% if booking.status != 'confirmed' %}
+                    <a href="{% url 'api_payment' booking.id %}" class="notes__footer_btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Оплатить</a>
+                    <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+              <p style="margin-top: 20px;">У вас пока нет предстоящих записей.</p>
+            {% endfor %}
+          </div>
+
+          <!-- ПРОШЕДШИЕ ЗАПИСИ -->
+          <div class="notes__content notes__content_history">
+            <div class="notes__main_title">ПРОШЕДШИЕ</div>
+
+            {% for booking in past_bookings %}
+            <div class="notes__main_block">
+              {% if booking.procedure.image %}
+                <img src="{{ booking.procedure.image.url }}" alt="{{ booking.procedure.title }}" class="notes__main_block__img">
+              {% else %}
+                <img src="{% static 'img/services/service1.svg' %}" alt="service" class="notes__main_block__img">
+              {% endif %}
+
+              <div class="notes__main_block__elems">
+                <div class="notes__main_block__header fic">
+                  <div class="notes__main_block__header__itesm fic">
+                    <div class="notes__main_number">Запись №{{ booking.id }}</div>
+                    <div class="notes__main_address">{{ booking.salon.address }}</div>
+                  </div>
+                  {% if booking.status == 'confirmed' %}
+                    <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
+                  {% else %}
+                    <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
+                  {% endif %}
+                </div>
+                <div class="notes__main_block__main ">
+                  <div class="notes__main_block__main_items">
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
+                    </div>
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.procedure.title }}</div>
+                      <div class="notes__main_block__main_elems__price otes__main_blockWidth">{{ booking.price_final }} руб</div>
+                    </div>
+                  </div>
+                  <div class="notes__main_block__main_items">
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
+                      <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
+                    </div>
+                    <div class="notes__main_block__main_elems fic">
+                      <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.specialist.full_name }}</div>
+                      <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ booking.start_at|date:"d F - H:i" }} </div>
+                    </div>
+                  </div>
+                </div>
+                <hr class="notes__block_hr">
+                <div class="notes__footer fic">
+                  <a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
+                  <a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
+                  {% if booking.status == 'confirmed' %}
+                    <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% empty %}
+              <p style="margin-top: 20px;">История записей пуста.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Блок оплаты для десктопов -->
+        <div class="col-md-12 col-lg-3 dec">
+          <div class="notes__pay">
+            {% if unpaid_sum > 0 %}
+            <button class="notes__pay_btn">Оплатить онлайн</button>
+            {% endif %}
+            <div class="notes__pay_info">Вы можете оплатить услуги прямо сейчас онлайн или расплатиться в салоне</div>
+            <div class="notes__pay_intro">Сумма оплаты</div>
+            <div class="notes__pay_sum">{{ unpaid_sum }} руб</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
