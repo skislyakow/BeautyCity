@@ -15,7 +15,7 @@ $(function () {
 	const state = {
 		salon: null,       // {id, name, address}
 		procedure: null,   // {id, title, base_price, duration_minutes}
-		specialist: null,  // {id, full_name, photo, specialty}
+		specialist: null,  // {id, full_name, photo, bio}
 		date: null,        // 'YYYY-MM-DD'
 		time: null,        // 'HH:MM'
 	};
@@ -24,7 +24,6 @@ $(function () {
 		return `${p} ₽`;
 	}
 
-	// ---------- Шаг 1: салоны ----------
 	$.get('/api/salons/', function (salons) {
 		const $list = $('#salonsList');
 		$list.empty();
@@ -56,7 +55,6 @@ $(function () {
 		$('#salonsList').html('<p>Не удалось загрузить салоны.</p>');
 	});
 
-	// ---------- Шаг 2: услуги ----------
 	function loadProcedures(salonId) {
 		const $btn = $('#procedureAccordionBtn').prop('disabled', false).text('(Выберите услугу)');
 		const $list = $('#proceduresList').empty().html('<p class="js-loading">Загрузка услуг...</p>');
@@ -91,7 +89,6 @@ $(function () {
 		});
 	}
 
-	// ---------- Шаг 3: мастера ----------
 	function loadSpecialists(salonId, procedureId) {
 		const $btn = $('#specialistAccordionBtn').prop('disabled', false).text('(Выберите мастера)');
 		const $list = $('#specialistsList').empty().html('<p class="js-loading">Загрузка мастеров...</p>');
@@ -104,7 +101,7 @@ $(function () {
 			}
 			specialists.forEach(function (specialist) {
 				const img = getAvatarUrl(specialist.photo);
-                const profText = specialist.specialty || specialist.profession || specialist.bio || '';
+				const profText = specialist.bio || '';
 				const profHtml = profText ? `<div class="accordion__block_prof">${profText}</div>` : '';
 
 				const $item = $(`
@@ -141,7 +138,7 @@ $(function () {
 
 	function resetSlots() {
 		state.time = null;
-		$('#nextBtn').prop('disabled', true);
+		$('#nextBtn').prop('disabled', true).removeClass('active');
 		$('#timeSlotsContainer').html('<p class="js-loading">Выберите салон, услугу, мастера и дату</p>');
 	}
 
@@ -159,17 +156,32 @@ $(function () {
 		}
 	}
 
-if (typeof AirDatepicker !== 'undefined') {
-    new AirDatepicker('#datepickerHere', {
-        minDate: new Date(),
-        onSelect: function (data) {
-            // Передаем выбранную дату в логику обновления слотов
-            if (data.date) {
-                handleDateSelection(data.date);
-            }
-        }
-    });
-}
+function initCalendar() {
+		const $dp = $('#datepickerHere');
+
+		if ($.fn.datepicker) {
+			$dp.datepicker({
+				minDate: new Date(),
+				onSelect: function (formattedDate, date) {
+					handleDateSelection(date || new Date(formattedDate));
+				}
+			});
+		}
+		else if (typeof AirDatepicker !== 'undefined') {
+			new AirDatepicker('#datepickerHere', {
+				minDate: new Date(),
+				onSelect: function({date}) {
+					if (date) handleDateSelection(date);
+				}
+			});
+		}
+		else {
+			console.warn("Библиотека календаря еще не загружена, ждем...");
+			setTimeout(initCalendar, 200);
+		}
+	}
+
+	initCalendar();
 
 	$(document).on('change', '#datepickerHere', function() {
 		const val = $(this).val();
@@ -213,7 +225,7 @@ if (typeof AirDatepicker !== 'undefined') {
 						state.time = shortTime;
 						$container.find('.time__elems_btn').removeClass('active');
 						$btn.addClass('active');
-						$('#nextBtn').prop('disabled', false);
+						$('#nextBtn').prop('disabled', false).addClass('active');
 					});
 					$group.find('.time__elems_elem').append($btn);
 				});
@@ -224,7 +236,6 @@ if (typeof AirDatepicker !== 'undefined') {
 		});
 	}
 
-	// ---------- Кнопка "Далее" ----------
 	$('#nextBtn').on('click', function () {
 		if (!state.salon || !state.procedure || !state.specialist || !state.date || !state.time) {
 			alert('Заполните все шаги записи: салон, услугу, мастера, дату и время');

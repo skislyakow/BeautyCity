@@ -23,7 +23,11 @@
 								<div class="contacts__form_block fic">
 									<input type="text" name="customer_name" class="contacts__form_iunput" placeholder="Введите имя" required>
 									<div class="contacts__form_inputBlock">
-										<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required>
+										{% if request.user.profile.phone %}
+											<input type="text" name="phone" class="contacts__form_iunput" value="{{ request.user.profile.phone }}" readonly required>
+										{% else %}
+											<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required>
+										{% endif %}
 									</div>
 								</div>
 								<textarea name="question" class="contacts__form_textarea" placeholder="Вопрос(необязательно)"></textarea>
@@ -45,29 +49,6 @@
 		</div>
 	</section>
 {% endblock %}
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-        }
-    }
-});
 
 {% block extra_js %}
 <script>

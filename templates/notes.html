@@ -3,16 +3,34 @@
 
 {% block title %}Мои записи — Beauty City{% endblock %}
 
+{% block extra_css %}
+<style>
+	.accaunt__ava.fic {
+		flex-wrap: wrap;
+		align-items: flex-start;
+	}
+	.accaunt__ava_name {
+		white-space: normal;
+		word-break: break-word;
+		max-width: 100%;
+		display: block;
+	}
+	.accaunt__left {
+		position: relative;
+		z-index: 1;
+	}
+</style>
+{% endblock %}
+
 {% block content %}
 <section id="notes">
   <div class="container">
     <div class="notes">
       <div class="row">
-        <!-- Боковое меню пользователя -->
         <div class="col-md-2">
           <div class="accaunt__left">
             <div class="accaunt__ava fic">
-              <img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
+              <img src="{% static 'img/avatars/user.svg' %}" alt="avatar" class="accaunt__ava_img">
               <span class="accaunt__ava_name">{{ request.user.username }}</span>
             </div>
             <div class="accaunt__settings fic">
@@ -59,14 +77,12 @@
           </div>
         </div>
 
-        <!-- Основной контент с записями -->
         <div class="col-md-12 col-lg-7">
           <div class="notes__main">
             <div class="notes__title">Мои записи</div>
             <hr class="hr">
           </div>
 
-          <!-- Блок оплаты для мобильных устройств -->
           <div class="notes__pay mob">
             <div class="notes__pay_block">
               <div class="notes__pay_title">Оплата услуг</div>
@@ -81,7 +97,6 @@
             </div>
           </div>
 
-          <!-- ПРЕДСТОЯЩИЕ ЗАПИСИ -->
           <div class="notes__content notes__content_upcoming">
             <div class="notes__main_title">ПРЕДСТОЯЩИЕ</div>
 
@@ -132,7 +147,10 @@
                   <a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
                   <a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
                   {% if booking.status != 'confirmed' %}
-                    <a href="{% url 'api_payment' booking.id %}" class="notes__footer_btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Оплатить</a>
+                    <form action="{% url 'api_payment' booking.id %}" method="post" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="notes__footer_btn">Оплатить</button>
+                    </form>
                     <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
                   {% endif %}
                 </div>
@@ -205,11 +223,13 @@
           </div>
         </div>
 
-        <!-- Блок оплаты для десктопов -->
         <div class="col-md-12 col-lg-3 dec">
           <div class="notes__pay">
             {% if unpaid_sum > 0 %}
-            <button class="notes__pay_btn">Оплатить онлайн</button>
+            <form action="{% url 'pay_all_unpaid' %}" method="post" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" class="notes__pay_btn">Оплатить онлайн</button>
+            </form>
             {% endif %}
             <div class="notes__pay_info">Вы можете оплатить услуги прямо сейчас онлайн или расплатиться в салоне</div>
             <div class="notes__pay_intro">Сумма оплаты</div>

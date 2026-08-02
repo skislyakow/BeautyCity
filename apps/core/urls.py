@@ -8,6 +8,7 @@ urlpatterns = [
     path('notes/', views.notes, name='notes'),
     path('dashboard/', views.admin_panel, name='admin'),
     path('admin-panel/', views.admin_panel, name='admin_panel'),
+    path('pay-all-unpaid/', create_bulk_payment, name='pay_all_unpaid'),
 
     # Авторизация по телефону (SMS-код заглушка 1234)
     path('phone-login/', phone_auth.phone_login_view, name='phone_login'),

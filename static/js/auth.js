@@ -1,5 +1,4 @@
 $(function () {
-	// --- CSRF для AJAX-запросов (стандартный способ Django) ---
 	function getCookie(name) {
 		let cookieValue = null;
 		if (document.cookie && document.cookie !== '') {
@@ -24,7 +23,6 @@ $(function () {
 
 	let pendingPhone = null;
 
-	// Шаг 1: отправка телефона -> запрос кода
 	$('.authPopup__form').on('submit', function (e) {
 		e.preventDefault();
 		const $form = $(this);
@@ -46,7 +44,6 @@ $(function () {
 			});
 	});
 
-	// Шаг 2: ввод кода -> подтверждение и вход
 	$('.confirmPopup__form').on('submit', function (e) {
 		e.preventDefault();
 		const $form = $(this);
@@ -75,14 +72,12 @@ $(function () {
 			});
 	});
 
-	// повторная отправка кода на тот же номер
 	$('.confirmResend').on('click', function (e) {
 		e.preventDefault();
 		if (!pendingPhone) return;
 		$.post(window.AUTH_URLS.requestCode, {tel: pendingPhone});
 	});
 
-	// автопереход между полями кода (ввёл цифру — фокус на следующее поле)
 	$('.confirmPopup__number input').on('input', function () {
 		const $this = $(this);
 		if ($this.val().length === 1) {
