@@ -12,6 +12,25 @@ $(function () {
 		return '/static/' + photoPath;
 	}
 
+	const urlParams = new URLSearchParams(window.location.search);
+	const pending = {
+		salon: urlParams.get('salon'),
+		procedure: urlParams.get('procedure'),
+		specialist: urlParams.get('specialist'),
+	};
+
+	// находит нужный пункт в уже отрисованном списке и "нажимает" на него —
+	// переиспользует те же обработчики click, что и обычный ручной выбор
+	function triggerSelect($container, id) {
+		if (!id) return false;
+		const $target = $container.find(`[data-id="${id}"]`);
+		if ($target.length) {
+			$target.trigger('click');
+			return true;
+		}
+		return false;
+	}
+
 	const state = {
 		salon: null,       // {id, name, address}
 		procedure: null,   // {id, title, base_price, duration_minutes}
@@ -24,6 +43,7 @@ $(function () {
 		return `${p} ₽`;
 	}
 
+	// ---------- Шаг 1: салоны ----------
 	$.get('/api/salons/', function (salons) {
 		const $list = $('#salonsList');
 		$list.empty();
@@ -51,12 +71,30 @@ $(function () {
 			});
 			$list.append($item);
 		});
+
+		// -- решаем, какой салон подставить автоматически --
+		if (pending.salon) {
+			triggerSelect($list, pending.salon);
+		} else if (pending.specialist) {
+			// пришли через карточку мастера — узнаём, в каких салонах он работает
+			$.get(`/api/specialists/${pending.specialist}/salons/`, function (specSalons) {
+				if (specSalons.length) {
+					pending.salon = specSalons[0].id;
+					triggerSelect($list, pending.salon);
+				}
+			});
+		} else if (pending.procedure) {
+			// пришли через карточку услуги — салон явно не указан, берём первый
+			pending.salon = salons[0].id;
+			triggerSelect($list, pending.salon);
+		}
 	}).fail(function () {
 		$('#salonsList').html('<p>Не удалось загрузить салоны.</p>');
 	});
 
+	// ---------- Шаг 2: услуги ----------
 	function loadProcedures(salonId) {
-		const $btn = $('#procedureAccordionBtn').prop('disabled', false).text('(Выберите услугу)');
+		$('#procedureAccordionBtn').prop('disabled', false).text('(Выберите услугу)');
 		const $list = $('#proceduresList').empty().html('<p class="js-loading">Загрузка услуг...</p>');
 
 		$.get(`/api/salons/${salonId}/procedures/`, function (offerings) {
@@ -84,13 +122,28 @@ $(function () {
 				});
 				$list.append($item);
 			});
+
+			// -- автоподстановка услуги --
+			if (pending.procedure) {
+				triggerSelect($list, pending.procedure);
+				pending.procedure = null;
+			} else if (pending.specialist) {
+				$.get(`/api/specialists/${pending.specialist}/procedures/`, function (specProcedures) {
+					if (!specProcedures.length) return;
+					// предпочитаем ту услугу мастера, которая реально продаётся в этом салоне
+					const offeredIds = offerings.map(o => o.procedure.id);
+					const match = specProcedures.find(p => offeredIds.includes(p.id)) || specProcedures[0];
+					triggerSelect($list, match.id);
+				});
+			}
 		}).fail(function () {
 			$list.html('<p>Не удалось загрузить услуги.</p>');
 		});
 	}
 
+	// ---------- Шаг 3: мастера ----------
 	function loadSpecialists(salonId, procedureId) {
-		const $btn = $('#specialistAccordionBtn').prop('disabled', false).text('(Выберите мастера)');
+		$('#specialistAccordionBtn').prop('disabled', false).text('(Выберите мастера)');
 		const $list = $('#specialistsList').empty().html('<p class="js-loading">Загрузка мастеров...</p>');
 
 		$.get('/api/specialists/', { salon: salonId, procedure: procedureId }, function (specialists) {
@@ -126,6 +179,12 @@ $(function () {
 				});
 				$list.append($item);
 			});
+
+			// -- автоподстановка мастера --
+			if (pending.specialist) {
+				triggerSelect($list, pending.specialist);
+				pending.specialist = null;
+			}
 		}).fail(function () {
 			$list.html('<p>Не удалось загрузить мастеров.</p>');
 		});
@@ -142,6 +201,7 @@ $(function () {
 		$('#timeSlotsContainer').html('<p class="js-loading">Выберите салон, услугу, мастера и дату</p>');
 	}
 
+	// ---------- Шаг 4: календарь ----------
 	function handleDateSelection(dateObj) {
 		if (!dateObj) return;
 		const yyyy = dateObj.getFullYear();
@@ -156,40 +216,20 @@ $(function () {
 		}
 	}
 
-function initCalendar() {
-		const $dp = $('#datepickerHere');
-
-		if ($.fn.datepicker) {
-			$dp.datepicker({
-				minDate: new Date(),
-				onSelect: function (formattedDate, date) {
-					handleDateSelection(date || new Date(formattedDate));
-				}
-			});
-		}
-		else if (typeof AirDatepicker !== 'undefined') {
-			new AirDatepicker('#datepickerHere', {
-				minDate: new Date(),
-				onSelect: function({date}) {
-					if (date) handleDateSelection(date);
-				}
-			});
-		}
-		else {
-			console.warn("Библиотека календаря еще не загружена, ждем...");
-			setTimeout(initCalendar, 200);
-		}
+	if (typeof AirDatepicker !== 'undefined') {
+		new AirDatepicker('#datepickerHere', {
+			minDate: new Date(),
+			onSelect: function (data) {
+				if (data.date) handleDateSelection(data.date);
+			}
+		});
 	}
-
-	initCalendar();
 
 	$(document).on('change', '#datepickerHere', function() {
 		const val = $(this).val();
 		if (val) {
 			const parsedDate = new Date(val);
-			if (!isNaN(parsedDate.getTime())) {
-				handleDateSelection(parsedDate);
-			}
+			if (!isNaN(parsedDate.getTime())) handleDateSelection(parsedDate);
 		}
 	});
 
@@ -235,6 +275,7 @@ function initCalendar() {
 			$container.html('<p>Не удалось загрузить свободное время.</p>');
 		});
 	}
+
 
 	$('#nextBtn').on('click', function () {
 		if (!state.salon || !state.procedure || !state.specialist || !state.date || !state.time) {
