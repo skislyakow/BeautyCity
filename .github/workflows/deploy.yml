@@ -29,6 +29,7 @@ jobs:
             python manage.py collectstatic --noinput
             python manage.py migrate --noinput
             python manage.py seed_db
+            python manage.py ensure_admin
             set_env() {
               local key="$1"; local val="$2"
               if [ -z "$val" ]; then

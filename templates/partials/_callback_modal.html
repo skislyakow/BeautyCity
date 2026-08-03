@@ -4,11 +4,9 @@
 	<div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
 		<div class="popup__title authPopup__title">Перезвоните мне</div>
 		<p class="popup__text authPopup__text">Оставьте контакты, и мы перезвоним в ближайшее время</p>
-		<form action="#" method="post" class="callbackPopup__form" data-url="{% url 'callback' %}">
+		<form action="#" method="post" class="callbackPopup__form authPopup__form" data-url="{% url 'callback' %}">
 			{% csrf_token %}
-			<div class="contacts__form_inputBlock">
-				<input type="text" name="name" class="contacts__form_iunput" placeholder="Ваше имя">
-			</div>
+			<input type="text" name="name" class="contacts__form_iunput" placeholder="Ваше имя">
 			<div class="contacts__form_inputBlock">
 				<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required="">
 			</div>
