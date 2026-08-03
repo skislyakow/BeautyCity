@@ -23,15 +23,18 @@ SALONS = [
     {"name": "BeautyCity Красная", "address": "ул. Красная, д. 10", "phone": "+79179023800", "image": "salons/salon3.svg"},
 ]
 
+# Картинки услуг по дизайну (вёрстка+фронтенд v2/index.html, servicesSlider):
+# service1 = Дневной макияж, service2 = Маникюр, service3 = Укладка волос,
+# service4 = Укладка волос (3 000), service5 = Педикюр, service6 = Окрашивание волос.
 PROCEDURES = [
-    {"title": "Окрашивание волос", "duration_minutes": 120, "base_price": "5000.00", "description": "Стойкое окрашивание волос с восстановлением", "image": "services/service1.svg"},
-    {"title": "Укладка волос", "duration_minutes": 60, "base_price": "1500.00", "description": "Укладка феном на укладочные средства", "image": "services/service2.svg"},
-    {"title": "Маникюр. Классический", "duration_minutes": 60, "base_price": "1400.00", "description": "Классический маникюр с покрытием", "image": "services/service3.svg"},
-    {"title": "Педикюр", "duration_minutes": 60, "base_price": "1400.00", "description": "Комплексный уход за стопами и ногтями", "image": "services/service4.svg"},
-    {"title": "Наращивание ногтей", "duration_minutes": 90, "base_price": "3000.00", "description": "Моделирование и наращивание ногтей", "image": "services/service5.svg"},
-    {"title": "Дневной макияж", "duration_minutes": 45, "base_price": "1400.00", "description": "Естественный макияж для дня", "image": "services/service6.svg"},
-    {"title": "Свадебный макияж", "duration_minutes": 90, "base_price": "3000.00", "description": "Стойкий макияж для особого дня", "image": "services/service6.svg"},
-    {"title": "Вечерний макияж", "duration_minutes": 60, "base_price": "2000.00", "description": "Яркий макияж для вечернего выхода", "image": "services/service6.svg"},
+    {"title": "Окрашивание волос", "duration_minutes": 120, "base_price": "5000.00", "description": "Стойкое окрашивание волос с восстановлением", "image": "services/service6.svg"},
+    {"title": "Укладка волос", "duration_minutes": 60, "base_price": "1500.00", "description": "Укладка феном на укладочные средства", "image": "services/service3.svg"},
+    {"title": "Маникюр. Классический", "duration_minutes": 60, "base_price": "1400.00", "description": "Классический маникюр с покрытием", "image": "services/service2.svg"},
+    {"title": "Педикюр", "duration_minutes": 60, "base_price": "1400.00", "description": "Комплексный уход за стопами и ногтями", "image": "services/service5.svg"},
+    {"title": "Наращивание ногтей", "duration_minutes": 90, "base_price": "3000.00", "description": "Моделирование и наращивание ногтей", "image": "services/service2.svg"},
+    {"title": "Дневной макияж", "duration_minutes": 45, "base_price": "1400.00", "description": "Естественный макияж для дня", "image": "services/service1.svg"},
+    {"title": "Свадебный макияж", "duration_minutes": 90, "base_price": "3000.00", "description": "Стойкий макияж для особого дня", "image": "services/service1.svg"},
+    {"title": "Вечерний макияж", "duration_minutes": 60, "base_price": "2000.00", "description": "Яркий макияж для вечернего выхода", "image": "services/service1.svg"},
 ]
 
 SPECIALISTS = [
