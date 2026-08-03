@@ -305,3 +305,30 @@ class CallbackRequest(models.Model):
 
     def __str__(self):
         return f"{self.name or 'Без имени'} — {self.phone}"
+
+
+class Review(models.Model):
+    """Отзыв клиента о мастере."""
+
+    specialist = models.ForeignKey(
+        Specialist,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="Мастер",
+    )
+    author_name = models.CharField("Имя клиента", max_length=120, blank=True)
+    rating = models.PositiveSmallIntegerField(
+        "Оценка",
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        default=5,
+    )
+    text = models.TextField("Текст отзыва", blank=True)
+    created_at = models.DateTimeField("Создан", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.specialist} — {self.rating}/5 ({self.author_name})"

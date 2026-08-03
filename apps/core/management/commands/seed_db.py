@@ -11,7 +11,7 @@ from django.utils.timezone import make_aware
 from apps.core.models import (
     Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon,
     WorkShift, PromoCode, Booking, SiteSettings, CustomerProfile,
-    ConsentDocument, ConsentAcceptance,
+    ConsentDocument, ConsentAcceptance, Review,
 )
 
 
@@ -80,6 +80,24 @@ CONSENT_TEXT_LINES = [
     "",
     "Согласие действует с момента подписания и может быть",
     "отозвано мной в любой момент в письменной форме.",
+]
+
+REVIEW_AUTHORS = [
+    "Анна", "Мария", "Екатерина", "Ольга", "Наталья", "Ирина",
+    "Дарья", "Светлана", "Полина", "Ксения", "Виктория", "Елена",
+]
+
+REVIEW_TEXTS = [
+    "Очень аккуратно и внимательно. Мастер услышал все пожелания, результат превзошёл ожидания.",
+    "Приятный мастер, всё сделал быстро и качественно. Вернусь ещё!",
+    "Всё понравилось: чисто, профессионально, доброжелательно. Рекомендую.",
+    "Отличная работа! Учли все детали, обслуживание на высшем уровне.",
+    "Мастер — профи своего дела. Результат держится долго, очень довольна.",
+    "Хороший сервис и приятная атмосфера. Запишусь снова без раздумий.",
+    "Пришла по рекомендации, не пожалела. Всё аккуратно и точно как договаривались.",
+    "Приятное впечатление: вовремя, качественно и с заботой о клиенте.",
+    "Лучший мастер, у которого я была! Делает красиво и с душой.",
+    "Всё отлично, спасибо за работу! Рекомендую друзьям и знакомым.",
 ]
 
 
@@ -231,6 +249,28 @@ def seed_promocodes():
         )
 
 
+def seed_reviews(specialists):
+    created = 0
+    for i, specialist in enumerate(specialists):
+        count = 3 + (i % 5)  # от 3 до 7 отзывов на мастера
+        for j in range(count):
+            author = REVIEW_AUTHORS[(i * 3 + j) % len(REVIEW_AUTHORS)]
+            if (i + j) % 7 == 0:
+                rating = 3
+            elif (i + j) % 4 == 0:
+                rating = 4
+            else:
+                rating = 5
+            text = REVIEW_TEXTS[(i + j) % len(REVIEW_TEXTS)]
+            _, was_created = Review.objects.get_or_create(
+                specialist=specialist,
+                author_name=author,
+                defaults={"rating": rating, "text": text},
+            )
+            created += 1 if was_created else 0
+    return created
+
+
 def seed_sitesettings():
     SiteSettings.objects.get_or_create(
         pk=1, defaults={"manager_phone": "+79179023800"},
@@ -318,6 +358,10 @@ class Command(BaseCommand):
 
             self.stdout.write("Создание промокодов...")
             seed_promocodes()
+
+            self.stdout.write("Создание отзывов...")
+            created_reviews = seed_reviews(specialists)
+            self.stdout.write(f"  создано {created_reviews} новых отзывов")
 
             self.stdout.write("Создание настроек сайта...")
             seed_sitesettings()
