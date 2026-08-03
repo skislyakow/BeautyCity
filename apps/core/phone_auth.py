@@ -38,10 +38,13 @@ def phone_confirm_view(request):
     if code != auth_code:
         return JsonResponse({'status': 'error', 'message': 'Неверный код'}, status=400)
 
-    login_by_phone(request, auth_phone)
+    user = login_by_phone(request, auth_phone)
     request.session.pop('auth_phone', None)
     request.session.pop('auth_code', None)
-    return JsonResponse({'status': 'ok', 'phone': auth_phone})
+    resp = {'status': 'ok', 'phone': auth_phone}
+    if getattr(user, 'is_staff', False):
+        resp['redirect'] = '/dashboard/'
+    return JsonResponse(resp)
 
 
 def login_by_phone(request, phone):
