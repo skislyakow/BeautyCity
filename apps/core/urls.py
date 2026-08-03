@@ -1,6 +1,6 @@
 from django.urls import path
 from apps.core import views, phone_auth
-from apps.core.payment_views import create_bulk_payment
+from apps.core.payment_views import create_bulk_payment, yookassa_webhook, payment_success
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -31,5 +31,7 @@ urlpatterns = [
     path('api/bookings/', views.create_booking, name='api_create_booking'),
     path('api/my-bookings/', views.my_bookings, name='api_my_bookings'),
     path('api/payments/<int:booking_id>/', views.initiate_payment, name='api_payment'),
+    path('payment-success/<int:booking_id>/', payment_success, name='payment_success'),
+    path('api/payments/webhook/', yookassa_webhook, name='yookassa_webhook'),
     path('api/admin/stats/', views.admin_stats, name='api_admin_stats'),
 ]

@@ -7,6 +7,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      YOOKASSA_SHOP_ID: ${{ secrets.YOOKASSA_SHOP_ID }}
+      YOOKASSA_SECRET_KEY: ${{ secrets.YOOKASSA_SECRET_KEY }}
+      SITE_URL: ${{ secrets.SITE_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -16,6 +20,7 @@ jobs:
           host: 132.243.121.192
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
+          envs: YOOKASSA_SHOP_ID,YOOKASSA_SECRET_KEY,SITE_URL
           script: |
             cd /var/www/beauty
             git pull origin main
@@ -24,4 +29,19 @@ jobs:
             python manage.py collectstatic --noinput
             python manage.py migrate --noinput
             python manage.py seed_db
+            set_env() {
+              local key="$1"; local val="$2"
+              if [ -z "$val" ]; then
+                echo "WARN: $key is empty, skipping"
+                return
+              fi
+              if grep -q "^$key=" .env; then
+                sed -i "s|^$key=.*|$key=$val|" .env
+              else
+                echo "$key=$val" >> .env
+              fi
+            }
+            set_env YOOKASSA_SHOP_ID "$YOOKASSA_SHOP_ID"
+            set_env YOOKASSA_SECRET_KEY "$YOOKASSA_SECRET_KEY"
+            set_env SITE_URL "$SITE_URL"
             systemctl restart beauty
