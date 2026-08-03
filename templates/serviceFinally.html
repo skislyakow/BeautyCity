@@ -60,9 +60,24 @@ $(function () {
 	}
 	const draft = JSON.parse(raw);
 
+	const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+	function fmtDate(iso) {
+		const [y, m, d] = iso.split('-').map(Number);
+		return `${d} ${months[m - 1]}`;
+	}
+	function fmtPrice(p) {
+		return `${Number(p)} ₽`;
+	}
+	function avatarUrl(photo) {
+		if (!photo) return "{% static 'img/masters/master1.svg' %}";
+		if (photo.startsWith('/') || photo.startsWith('http')) return photo;
+		return '/' + photo;
+	}
+
 	$('#bookingSummary').html(`
 		<div class="serviceFinally__form_block">
 			<div class="serviceFinally__form_header fic">
+				<span class="serviceFinally__form_header__number">Запись №—</span>
 				<div class="serviceFinally__form_header__item fic">
 					<div class="serviceFinally__form_header__service">${draft.salon.name}</div>
 					<div class="serviceFinally__form_header__address">${draft.salon.address}</div>
@@ -71,15 +86,16 @@ $(function () {
 			<div class="serviceFinally__form_content">
 				<div class="serviceFinally__form_content__block fic">
 					<div class="serviceFinally__form_content__title">${draft.procedure.title}</div>
-					<div class="serviceFinally__form_content__price">${draft.procedure.base_price} ₽</div>
+					<div class="serviceFinally__form_content__price">${fmtPrice(draft.procedure.base_price)}</div>
 				</div>
 				<div class="serviceFinally__form_content__block fic">
 					<div class="serviceFinally__form_content__items fic">
+						<img src="${avatarUrl(draft.specialist.photo)}" alt="avatar" class="accordion__block_img">
 						<div class="accordion__block_master">${draft.specialist.full_name}</div>
 					</div>
 					<div class="serviceFinally__form_content__item fic">
 						<div class="serviceFinally__form_content__time">${draft.time}</div>
-						<div class="serviceFinally__form_content__date">${draft.date}</div>
+						<div class="serviceFinally__form_content__date">${fmtDate(draft.date)}</div>
 					</div>
 				</div>
 			</div>
