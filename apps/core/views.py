@@ -144,7 +144,11 @@ def create_booking(request):
         end_at=end_at,
     )
 
-    login_by_phone(request, booking.phone)
+    user = login_by_phone(request, booking.phone)
+
+    if booking.customer_name and not user.first_name:
+        user.first_name = booking.customer_name
+        user.save(update_fields=['first_name'])
 
     return Response(BookingSerializer(booking).data, status=201)
 

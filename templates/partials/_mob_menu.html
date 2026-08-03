@@ -27,7 +27,7 @@
 									<li class="mobMenu__menu_item"><a href="{% url 'index' %}#contacts" class="mobMenu__menu_link">Контакты</a></li>
 								</ul>
 							</nav>
-							<a href="{% url 'notes' %}" class="mobMenu__account">Личный кабинет</a>
+							<a href="{% url 'notes' %}" class="mobMenu__account">{% if request.user.is_authenticated %}{{ account_name }}{% else %}Личный кабинет{% endif %}</a>
 						</div>
 					</div>
 					<div class="row">
