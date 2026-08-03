@@ -14,6 +14,7 @@ from .serializers import (
     ProcedureOfferingSerializer, BookingCreateSerializer, BookingSerializer
 )
 from .payment_views import create_payment
+from .phone_auth import login_by_phone
 from .slots import get_available_slots
 from datetime import timedelta
 
@@ -142,6 +143,9 @@ def create_booking(request):
         price_final=offering.price,
         end_at=end_at,
     )
+
+    login_by_phone(request, booking.phone)
+
     return Response(BookingSerializer(booking).data, status=201)
 
 
