@@ -2,7 +2,7 @@ $(document).ready(function() {
 	// 1. Слайдеры
 	$('.salonsSlider').slick({
 		arrows: true,
-		slidesToShow: 3,
+		slidesToShow: 4,
 		infinite: true,
 		prevArrow: $('.salons .leftArrow'),
 		nextArrow: $('.salons .rightArrow'),

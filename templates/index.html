@@ -282,7 +282,7 @@ $(function () {
 		salons.forEach(function (salon) {
 			const img = salon.image || "{% static 'img/salons/salon1.svg' %}";
 			$container.append(`
-				<div class="col-6 col-md-4 col-lg-4 col-xl-4">
+				<div class="col-6 col-md-4 col-lg-4 col-xl-3">
 					<a href="/service/?salon=${salon.id}" class="salons__block" style="text-decoration:none;color:inherit;display:block;">
 						<img src="${img}" alt="salon" class="salons__block_img">
 						<div class="salons__elems">
