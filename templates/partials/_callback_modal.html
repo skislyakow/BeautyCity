@@ -1,7 +1,7 @@
 {% load static %}
 <div style="display: none;">
 <div class="authPopup popup box-modal" id="callbackModal">
-	<div class="box-modal_close modal-close">&times;</div>
+	<div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
 		<div class="popup__title authPopup__title">Перезвоните мне</div>
 		<p class="popup__text authPopup__text">Оставьте контакты, и мы перезвоним в ближайшее время</p>
 		<form action="#" method="post" class="callbackPopup__form" data-url="{% url 'callback' %}">

@@ -1,7 +1,7 @@
 {% load static %}
 <div style="display: none;">
 <div class="authPopup popup box-modal" id="authModal">
-	<div class="box-modal_close modal-close">&times;</div>
+	<div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
 		<div class="popup__title authPopup__title">Войти по коду</div>
 		<p class="popup__text authPopup__text">Введите свой номер телефона, мы вышлем на него код</p>
 		<form action="#" method="post" class="authPopup__form" id="phoneLoginForm" data-url="{% url 'phone_login' %}">

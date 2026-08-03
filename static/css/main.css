@@ -2019,6 +2019,11 @@ width: 49px;
 height: 71px;
 text-align: center;
 margin-right: 10px;
+padding-left: 0;
+padding-right: 0;
+font-weight: 700;
+font-size: 24px;
+line-height: 71px;
 }
 .tipsPopup__form_inputNum:last-child {margin-right: 0;}
 .box-modal_close {
