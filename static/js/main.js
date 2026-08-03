@@ -167,6 +167,7 @@ $(document).ready(function() {
 		$btn.prop('disabled', true);
 		$.post($form.data('url'), $form.serialize())
 			.done(function() {
+				$form.closest('#callbackModal').find('.authPopup__text').hide();
 				$form.html('<div class="popup__text">Заявка принята, перезвоним в ближайшее время</div>');
 			})
 			.fail(function(xhr) {
