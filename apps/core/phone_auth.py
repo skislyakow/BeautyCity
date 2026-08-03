@@ -38,17 +38,29 @@ def phone_confirm_view(request):
     if code != auth_code:
         return JsonResponse({'status': 'error', 'message': 'Неверный код'}, status=400)
 
-    user, created = User.objects.get_or_create(
-        username=auth_phone,
-        defaults={'first_name': ''},
-    )
-    if created:
-        CustomerProfile.objects.create(user=user, phone=auth_phone)
-
-    login(request, user)
+    login_by_phone(request, auth_phone)
     request.session.pop('auth_phone', None)
     request.session.pop('auth_code', None)
-    return JsonResponse({'status': 'ok', 'phone': user.username})
+    return JsonResponse({'status': 'ok', 'phone': auth_phone})
+
+
+def login_by_phone(request, phone):
+    """Тихий вход по номеру телефона (без SMS-кода). Используется после создания записи."""
+    phone = (phone or '').strip()
+
+    profile = CustomerProfile.objects.filter(phone=phone).select_related('user').first()
+    if profile:
+        user = profile.user
+    else:
+        user, created = User.objects.get_or_create(
+            username=phone,
+            defaults={'first_name': ''},
+        )
+        if created:
+            CustomerProfile.objects.create(user=user, phone=phone)
+
+    login(request, user)
+    return user
 
 
 def logout_view(request):

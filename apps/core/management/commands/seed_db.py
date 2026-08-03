@@ -11,7 +11,7 @@ from django.utils.timezone import make_aware
 from apps.core.models import (
     Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon,
     WorkShift, PromoCode, Booking, SiteSettings, CustomerProfile,
-    ConsentDocument, ConsentAcceptance,
+    ConsentDocument, ConsentAcceptance, Review,
 )
 
 
@@ -23,15 +23,18 @@ SALONS = [
     {"name": "BeautyCity Красная", "address": "ул. Красная, д. 10", "phone": "+79179023800", "image": "salons/salon3.svg"},
 ]
 
+# Картинки услуг по дизайну (вёрстка+фронтенд v2/index.html, servicesSlider):
+# service1 = Дневной макияж, service2 = Маникюр, service3 = Укладка волос,
+# service4 = Укладка волос (3 000), service5 = Педикюр, service6 = Окрашивание волос.
 PROCEDURES = [
-    {"title": "Окрашивание волос", "duration_minutes": 120, "base_price": "5000.00", "description": "Стойкое окрашивание волос с восстановлением", "image": "services/service1.svg"},
-    {"title": "Укладка волос", "duration_minutes": 60, "base_price": "1500.00", "description": "Укладка феном на укладочные средства", "image": "services/service2.svg"},
-    {"title": "Маникюр. Классический", "duration_minutes": 60, "base_price": "1400.00", "description": "Классический маникюр с покрытием", "image": "services/service3.svg"},
-    {"title": "Педикюр", "duration_minutes": 60, "base_price": "1400.00", "description": "Комплексный уход за стопами и ногтями", "image": "services/service4.svg"},
-    {"title": "Наращивание ногтей", "duration_minutes": 90, "base_price": "3000.00", "description": "Моделирование и наращивание ногтей", "image": "services/service5.svg"},
-    {"title": "Дневной макияж", "duration_minutes": 45, "base_price": "1400.00", "description": "Естественный макияж для дня", "image": "services/service6.svg"},
-    {"title": "Свадебный макияж", "duration_minutes": 90, "base_price": "3000.00", "description": "Стойкий макияж для особого дня", "image": "services/service6.svg"},
-    {"title": "Вечерний макияж", "duration_minutes": 60, "base_price": "2000.00", "description": "Яркий макияж для вечернего выхода", "image": "services/service6.svg"},
+    {"title": "Окрашивание волос", "duration_minutes": 120, "base_price": "5000.00", "description": "Стойкое окрашивание волос с восстановлением", "image": "services/service6.svg"},
+    {"title": "Укладка волос", "duration_minutes": 60, "base_price": "1500.00", "description": "Укладка феном на укладочные средства", "image": "services/service3.svg"},
+    {"title": "Маникюр. Классический", "duration_minutes": 60, "base_price": "1400.00", "description": "Классический маникюр с покрытием", "image": "services/service2.svg"},
+    {"title": "Педикюр", "duration_minutes": 60, "base_price": "1400.00", "description": "Комплексный уход за стопами и ногтями", "image": "services/service5.svg"},
+    {"title": "Наращивание ногтей", "duration_minutes": 90, "base_price": "3000.00", "description": "Моделирование и наращивание ногтей", "image": "services/service2.svg"},
+    {"title": "Дневной макияж", "duration_minutes": 45, "base_price": "1400.00", "description": "Естественный макияж для дня", "image": "services/service1.svg"},
+    {"title": "Свадебный макияж", "duration_minutes": 90, "base_price": "3000.00", "description": "Стойкий макияж для особого дня", "image": "services/service1.svg"},
+    {"title": "Вечерний макияж", "duration_minutes": 60, "base_price": "2000.00", "description": "Яркий макияж для вечернего выхода", "image": "services/service1.svg"},
 ]
 
 SPECIALISTS = [
@@ -80,6 +83,24 @@ CONSENT_TEXT_LINES = [
     "",
     "Согласие действует с момента подписания и может быть",
     "отозвано мной в любой момент в письменной форме.",
+]
+
+REVIEW_AUTHORS = [
+    "Анна", "Мария", "Екатерина", "Ольга", "Наталья", "Ирина",
+    "Дарья", "Светлана", "Полина", "Ксения", "Виктория", "Елена",
+]
+
+REVIEW_TEXTS = [
+    "Очень аккуратно и внимательно. Мастер услышал все пожелания, результат превзошёл ожидания.",
+    "Приятный мастер, всё сделал быстро и качественно. Вернусь ещё!",
+    "Всё понравилось: чисто, профессионально, доброжелательно. Рекомендую.",
+    "Отличная работа! Учли все детали, обслуживание на высшем уровне.",
+    "Мастер — профи своего дела. Результат держится долго, очень довольна.",
+    "Хороший сервис и приятная атмосфера. Запишусь снова без раздумий.",
+    "Пришла по рекомендации, не пожалела. Всё аккуратно и точно как договаривались.",
+    "Приятное впечатление: вовремя, качественно и с заботой о клиенте.",
+    "Лучший мастер, у которого я была! Делает красиво и с душой.",
+    "Всё отлично, спасибо за работу! Рекомендую друзьям и знакомым.",
 ]
 
 
@@ -231,6 +252,28 @@ def seed_promocodes():
         )
 
 
+def seed_reviews(specialists):
+    created = 0
+    for i, specialist in enumerate(specialists):
+        count = 3 + (i % 5)  # от 3 до 7 отзывов на мастера
+        for j in range(count):
+            author = REVIEW_AUTHORS[(i * 3 + j) % len(REVIEW_AUTHORS)]
+            if (i + j) % 7 == 0:
+                rating = 3
+            elif (i + j) % 4 == 0:
+                rating = 4
+            else:
+                rating = 5
+            text = REVIEW_TEXTS[(i + j) % len(REVIEW_TEXTS)]
+            _, was_created = Review.objects.get_or_create(
+                specialist=specialist,
+                author_name=author,
+                defaults={"rating": rating, "text": text},
+            )
+            created += 1 if was_created else 0
+    return created
+
+
 def seed_sitesettings():
     SiteSettings.objects.get_or_create(
         pk=1, defaults={"manager_phone": "+79179023800"},
@@ -318,6 +361,10 @@ class Command(BaseCommand):
 
             self.stdout.write("Создание промокодов...")
             seed_promocodes()
+
+            self.stdout.write("Создание отзывов...")
+            created_reviews = seed_reviews(specialists)
+            self.stdout.write(f"  создано {created_reviews} новых отзывов")
 
             self.stdout.write("Создание настроек сайта...")
             seed_sitesettings()

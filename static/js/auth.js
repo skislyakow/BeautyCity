@@ -23,6 +23,14 @@ $(function () {
 
 	let pendingPhone = null;
 
+	function formatPhone(raw) {
+		const digits = String(raw || '').replace(/\D/g, '');
+		let d = digits;
+		if (d.length === 11 && (d[0] === '7' || d[0] === '8')) d = d.slice(1);
+		if (d.length !== 10) return String(raw || '');
+		return `+7 (${d.slice(0, 3)}) ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8, 10)}`;
+	}
+
 	$('.authPopup__form').on('submit', function (e) {
 		e.preventDefault();
 		const $form = $(this);
@@ -34,7 +42,7 @@ $(function () {
 		$.post(window.AUTH_URLS.requestCode, {tel: phone})
 			.done(function (data) {
 				pendingPhone = data.phone;
-				$('.confirmPopup__phone').text(pendingPhone);
+				$('#confirmPhone').text(formatPhone(pendingPhone));
 				$('#authModal').arcticmodal('close');
 				$('#confirmModal').arcticmodal();
 			})

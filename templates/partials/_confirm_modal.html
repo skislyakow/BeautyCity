@@ -1,7 +1,7 @@
 {% load static %}
 <div style="display: none;">
 <div class="confirmPopup popup box-modal" id="confirmModal">
-	<div class="box-modal_close modal-close">&times;</div>
+	<div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
 		<div class="popup__title confirmPopup__title">Подтвердите номер</div>
 		<p class="popup__text confirmPopup__text">Введите код, полученный по SMS на номер <span id="confirmPhone">+7 (000) 000 00 00</span></p>
 		<form action="#" method="post" class="confirmPopup__form" id="phoneConfirmForm" data-url="{% url 'phone_confirm' %}">

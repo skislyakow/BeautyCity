@@ -262,6 +262,18 @@
 {% block extra_js %}
 <script>
 $(function () {
+	function refreshSlider($slider) {
+		if ($slider.hasClass('slick-initialized')) $slider.slick('refresh');
+	}
+
+	function pluralReviews(n) {
+		n = Number(n) || 0;
+		const mod10 = n % 10, mod100 = n % 100;
+		if (mod10 === 1 && mod100 !== 11) return n + ' отзыв';
+		if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return n + ' отзыва';
+		return n + ' отзывов';
+	}
+
 	// --- Салоны ---
 	$.get('/api/salons/', function (salons) {
 		const $container = $('#salonsContainer');
@@ -281,6 +293,7 @@ $(function () {
 				</div>
 			`);
 		});
+		refreshSlider($('#salonsContainer'));
 	}).fail(function () { $('#salonsContainer').html('<p>Не удалось загрузить салоны.</p>'); });
 
 	// --- Услуги ---
@@ -302,6 +315,7 @@ $(function () {
 				</div>
 			`);
 		});
+		refreshSlider($('#servicesContainer'));
 	}).fail(function () { $('#servicesContainer').html('<p>Не удалось загрузить услуги.</p>'); });
 
 	// --- Мастера ---
@@ -316,9 +330,11 @@ $(function () {
 					<div class="cardBlock masters__block">
 						<div class="masters__header fic">
 							<img src="${img}" alt="master" class="masters__header_img">
-							<div class="masters__header_elmes">
-								<div class="masters__header_name">${specialist.full_name}</div>
-							</div>
+						<div class="masters__header_elmes">
+							<div class="masters__header_name">${specialist.full_name}</div>
+							<img src="{% static 'img/rating.svg' %}" alt="rating" class="masters__header_rating">
+							<div class="masters__header_reviews">${pluralReviews(specialist.reviews_count)}</div>
+						</div>
 						</div>
 						<div class="masters__main">
 							<div class="masters__main_speciality">СПЕЦИАЛЬНОСТЬ:</div>
@@ -335,6 +351,7 @@ $(function () {
 				</div>
 			`);
 		});
+		refreshSlider($('#mastersContainer'));
 	}).fail(function () { $('#mastersContainer').html('<p>Не удалось загрузить мастеров.</p>'); });
 });
 </script>

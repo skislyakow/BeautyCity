@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.db.models import Avg
+
 from .models import Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon, WorkShift, Booking, PromoCode
 from .slots import get_available_slots
 
@@ -17,10 +19,24 @@ class ProcedureSerializer(serializers.ModelSerializer):
 
 class SpecialistSerializer(serializers.ModelSerializer):
     procedures = ProcedureSerializer(many=True, read_only=True)
+    rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Specialist
-        fields = '__all__'
+        fields = [
+            'id', 'full_name', 'photo', 'bio', 'experience',
+            'is_active', 'procedures', 'rating', 'reviews_count',
+        ]
+
+    def get_rating(self, obj):
+        agg = obj.reviews.aggregate(avg=Avg('rating'))
+        if agg['avg'] is None:
+            return None
+        return round(agg['avg'], 1)
+
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
 
 
 class ProcedureOfferingSerializer(serializers.ModelSerializer):
