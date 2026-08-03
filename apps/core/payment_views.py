@@ -19,7 +19,7 @@ def _configure_yookassa():
 
 
 def create_payment(request, booking_id):
-
+    """Одиночная оплата — без изменений, уже работает."""
     booking = get_object_or_404(Booking, id=booking_id)
     if booking.status == 'confirmed':
         return redirect('/?error=already_paid')
@@ -34,6 +34,7 @@ def create_payment(request, booking_id):
                 "value": f"{float(booking.price_final):.2f}",
                 "currency": "RUB"
             },
+            "capture": True,
             "confirmation": {
                 "type": "redirect",
                 "return_url": f"{settings.SITE_URL}/payment-success/{booking_id}/"
@@ -92,18 +93,30 @@ def create_bulk_payment(request):
             {'status': 'error', 'message': 'Оплата временно недоступна: не настроен приём платежей'},
             status=400,
         )
+
+    # id записей известны ЗАРАНЕЕ, до создания платежа (в отличие от payment.id) —
+    # поэтому именно их и кладём в return_url
+    booking_ids = list(unpaid_bookings.values_list('id', flat=True))
     total_amount = sum(b.price_final for b in unpaid_bookings)
-    payment = YooPayment.create({
-        "amount": {
-            "value": f"{float(total_amount):.2f}",
-            "currency": "RUB"
-        },
-        "confirmation": {
-            "type": "redirect",
-            "return_url": f"{settings.SITE_URL}/payment-success/"
-        },
-        "description": f"Массовая оплата записей ({unpaid_bookings.count()} шт.)"
-    })
+
+    try:
+        payment = YooPayment.create({
+            "amount": {
+                "value": f"{float(total_amount):.2f}",
+                "currency": "RUB"
+            },
+            "capture": True,
+            "confirmation": {
+                "type": "redirect",
+                "return_url": f"{settings.SITE_URL}/payment-success-bulk/?booking_ids={','.join(map(str, booking_ids))}"
+            },
+            "description": f"Массовая оплата записей ({unpaid_bookings.count()} шт.)"
+        })
+    except Exception as exc:
+        return JsonResponse(
+            {'status': 'error', 'message': f'Ошибка при создании платежа: {exc}'},
+            status=502,
+        )
 
     unpaid_bookings.update(payment_id=payment.id)
 
@@ -111,9 +124,10 @@ def create_bulk_payment(request):
 
 
 def payment_success(request, booking_id):
+    """Возврат с одиночной оплаты — без изменений."""
     booking = get_object_or_404(Booking, id=booking_id)
 
-    if booking.status != 'confirmed' and booking.payment_id:
+    if booking.status != 'confirmed' and booking.payment_id and _configure_yookassa():
         try:
             payment = YooPayment.find_one(booking.payment_id)
             if payment.status == 'succeeded':
@@ -125,3 +139,29 @@ def payment_success(request, booking_id):
     if booking.status == 'confirmed':
         return redirect(f'/notes/?payment=success')
     return redirect(f'/notes/?payment=pending')
+
+
+def payment_success_bulk(request):
+    """Возврат с массовой оплаты — новая вьюха, раньше её не было вообще."""
+    ids_param = request.GET.get('booking_ids', '')
+    try:
+        booking_ids = [int(x) for x in ids_param.split(',') if x]
+    except ValueError:
+        booking_ids = []
+
+    bookings = Booking.objects.filter(id__in=booking_ids)
+    if not bookings.exists():
+        return redirect('/notes/?payment=unknown')
+
+    payment_id = bookings.first().payment_id
+    if payment_id and not bookings.filter(status='confirmed').exists() and _configure_yookassa():
+        try:
+            payment = YooPayment.find_one(payment_id)
+            if payment.status == 'succeeded':
+                bookings.update(status='confirmed')
+        except Exception:
+            pass
+
+    if bookings.filter(status='confirmed').exists():
+        return redirect('/notes/?payment=success')
+    return redirect('/notes/?payment=pending')
