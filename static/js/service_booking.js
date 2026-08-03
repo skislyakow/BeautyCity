@@ -43,6 +43,11 @@ $(function () {
 		return `${p} ₽`;
 	}
 
+	function closePanel($btn) {
+		$btn.removeClass('active');
+		$btn.next('.panel').removeClass('active');
+	}
+
 	// ---------- Шаг 1: салоны ----------
 	$.get('/api/salons/', function (salons) {
 		const $list = $('#salonsList');
@@ -65,6 +70,7 @@ $(function () {
 				$('#salonsList .accordion__block').css('font-weight', 'normal');
 				$item.css('font-weight', 'bold');
 				$('#salonAccordionBtn').addClass('selected').text(`${salon.name}  ${salon.address}`);
+				closePanel($('#salonAccordionBtn'));
 				loadProcedures(salon.id);
 				resetSpecialists('(Сначала выберите услугу)');
 				resetSlots();
@@ -117,6 +123,7 @@ $(function () {
 					$list.find('.accordion__block_item').css('font-weight', 'normal');
 					$item.css('font-weight', 'bold');
 					$('#procedureAccordionBtn').addClass('selected').text(`${procedure.title}  ${fmtPrice(offering.price)}`);
+					closePanel($('#procedureAccordionBtn'));
 					loadSpecialists(state.salon.id, procedure.id);
 					resetSlots();
 				});
@@ -173,6 +180,7 @@ $(function () {
 
 					let clone = $item.clone();
 					$('#specialistAccordionBtn').addClass('selected').html(clone);
+					closePanel($('#specialistAccordionBtn'));
 
 					resetSlots();
 					if (state.date) loadSlots();
