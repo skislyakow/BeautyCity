@@ -37,6 +37,7 @@ urlpatterns = [
     ),
     path("api/specialists/<int:pk>/salons/", views.specialist_salons, name="api_specialist_salons"),
     path("api/slots/", views.available_slots, name="api_slots"),
+    path("api/promo/check/", views.check_promo, name="api_promo_check"),
     path("api/bookings/", views.create_booking, name="api_create_booking"),
     path("api/my-bookings/", views.my_bookings, name="api_my_bookings"),
     path("api/payments/<int:booking_id>/", views.initiate_payment, name="api_payment"),

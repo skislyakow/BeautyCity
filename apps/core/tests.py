@@ -16,6 +16,7 @@ from apps.core.models import (
     CustomerProfile,
     Procedure,
     ProcedureOffering,
+    PromoCode,
     Salon,
     Specialist,
     SpecialistSalon,
@@ -449,6 +450,58 @@ class BookingCreationTests(TransactionTestCase):
         self.assertEqual(statuses.count(201), 1, statuses)
         self.assertTrue(all(status in (201, 400, 409) for status in statuses), statuses)
         self.assertEqual(Booking.objects.filter(specialist=self.specialist).count(), 1, statuses)
+
+    def test_promo_check_valid(self):
+        PromoCode.objects.create(code="KID20", discount_percent=20, is_active=True)
+
+        response = self.client.post(
+            "/api/promo/check/",
+            data=json.dumps({"code": "kid20"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["valid"])
+        self.assertEqual(response.json()["discount_percent"], 20)
+
+    def test_promo_check_invalid(self):
+        response = self.client.post(
+            "/api/promo/check/",
+            data=json.dumps({"code": "BAD"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(response.json()["valid"])
+
+    def test_booking_with_valid_promo_applies_discount(self):
+        PromoCode.objects.create(code="KID20", discount_percent=20, is_active=True)
+
+        payload = self._payload()
+        payload["promo_code"] = "kid20"
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        booking = Booking.objects.first()
+        self.assertEqual(booking.price_original, Decimal("1000.00"))
+        self.assertEqual(booking.price_final, Decimal("800.00"))
+        self.assertEqual(booking.promo_code.code, "KID20")
+
+    def test_booking_with_invalid_promo_returns_error(self):
+        payload = self._payload()
+        payload["promo_code"] = "BAD"
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Booking.objects.count(), 0)
 
 
 class MyBookingsAuthTests(TestCase):

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 from random import uniform
 from time import sleep
 
@@ -19,6 +20,7 @@ from .models import (
     CallbackRequest,
     Procedure,
     ProcedureOffering,
+    PromoCode,
     Salon,
     Specialist,
 )
@@ -141,6 +143,7 @@ def _create_booking_once(request):
     procedure = serializer.validated_data.get("procedure")
     specialist = serializer.validated_data.get("specialist")
     start_at = serializer.validated_data.get("start_at")
+    promo = serializer.validated_data.pop("promo_code_obj", None)
 
     offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
     if not offering:
@@ -148,6 +151,14 @@ def _create_booking_once(request):
             {"error": "Данная услуга не предоставляется в выбранном салоне"}, status=400
         )
     end_at = start_at + timedelta(minutes=procedure.duration_minutes)
+
+    price_original = offering.price
+    price_final = offering.price
+    if promo:
+        discount = Decimal(promo.discount_percent)
+        price_final = (price_original * (Decimal(100) - discount) / Decimal(100)).quantize(
+            Decimal("0.01")
+        )
 
     try:
         with transaction.atomic():
@@ -166,8 +177,9 @@ def _create_booking_once(request):
                 return Response({"error": "Время уже занято"}, status=409)
 
             booking = serializer.save(
-                price_original=offering.price,
-                price_final=offering.price,
+                promo_code=promo,
+                price_original=price_original,
+                price_final=price_final,
                 end_at=end_at,
             )
     except IntegrityError:
@@ -223,6 +235,28 @@ def my_bookings(request):
     bookings = Booking.objects.filter(phone=phone).order_by("-start_at")
     serializer = BookingSerializer(bookings, many=True)
     return Response(serializer.data)
+
+
+@api_view(["POST"])
+def check_promo(request):
+    code = request.data.get("code") or request.data.get("promo_code") or ""
+    if not code:
+        return Response({"valid": False, "error": "Укажите промокод"}, status=400)
+    code = str(code).strip().upper()
+    try:
+        promo = PromoCode.objects.get(code=code)
+    except PromoCode.DoesNotExist:
+        return Response({"valid": False, "error": "Промокод не найден"}, status=404)
+    if not promo.is_valid_today():
+        return Response({"valid": False, "error": "Промокод недействителен"}, status=400)
+    return Response(
+        {
+            "valid": True,
+            "code": promo.code,
+            "discount_percent": promo.discount_percent,
+            "description": promo.description,
+        }
+    )
 
 
 @api_view(["POST"])

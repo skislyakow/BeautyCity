@@ -30,6 +30,14 @@
 										{% endif %}
 									</div>
 								</div>
+								<div class="contacts__form_block fic" style="margin-top:10px;">
+									<div class="contacts__form_inputBlock" style="width:100%;">
+										<input type="text" name="promo_code" class="contacts__form_iunput" placeholder="Промокод (необязательно)">
+									</div>
+									<button type="button" id="applyPromo" class="popup__btn" style="margin-left:10px;padding:10px 20px;">Применить</button>
+								</div>
+								<div id="promoInfo" style="margin:5px 0 10px 0;color:#2e7d32;display:none;"></div>
+								<div id="promoError" style="margin:5px 0 10px 0;color:#e74c3c;display:none;"></div>
 								<textarea name="question" class="contacts__form_textarea" placeholder="Вопрос(необязательно)"></textarea>
 								<div class="contacts__form_checkboxBlock fic">
 									<input type="checkbox" class="contacts__form_checkbox" required>
@@ -52,6 +60,21 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+	let cookieValue = null;
+	if (document.cookie && document.cookie !== '') {
+		const cookies = document.cookie.split(';');
+		for (let i = 0; i < cookies.length; i++) {
+			const cookie = cookies[i].trim();
+			if (cookie.substring(0, name.length + 1) === (name + '=')) {
+				cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				break;
+			}
+		}
+	}
+	return cookieValue;
+}
+
 $(function () {
 	const raw = sessionStorage.getItem('bc_booking_draft');
 	if (!raw) {
@@ -60,32 +83,73 @@ $(function () {
 	}
 	const draft = JSON.parse(raw);
 
-	$('#bookingSummary').html(`
-		<div class="serviceFinally__form_block">
-			<div class="serviceFinally__form_header fic">
-				<div class="serviceFinally__form_header__item fic">
-					<div class="serviceFinally__form_header__service">${draft.salon.name}</div>
-					<div class="serviceFinally__form_header__address">${draft.salon.address}</div>
-				</div>
-			</div>
-			<div class="serviceFinally__form_content">
-				<div class="serviceFinally__form_content__block fic">
-					<div class="serviceFinally__form_content__title">${draft.procedure.title}</div>
-					<div class="serviceFinally__form_content__price">${draft.procedure.base_price} ₽</div>
-				</div>
-				<div class="serviceFinally__form_content__block fic">
-					<div class="serviceFinally__form_content__items fic">
-						<div class="accordion__block_master">${draft.specialist.full_name}</div>
-					</div>
-					<div class="serviceFinally__form_content__item fic">
-						<div class="serviceFinally__form_content__time">${draft.time}</div>
-						<div class="serviceFinally__form_content__date">${draft.date}</div>
+	let appliedPromo = null;
+
+	function renderSummary() {
+		const originalPrice = Number(draft.procedure.base_price || 0);
+		let price = originalPrice;
+		if (appliedPromo && appliedPromo.discount_percent) {
+			price = Math.round(originalPrice * (100 - appliedPromo.discount_percent) / 100 * 100) / 100;
+		}
+		$('#bookingSummary').html(`
+			<div class="serviceFinally__form_block">
+				<div class="serviceFinally__form_header fic">
+					<div class="serviceFinally__form_header__item fic">
+						<div class="serviceFinally__form_header__service">${draft.salon.name}</div>
+						<div class="serviceFinally__form_header__address">${draft.salon.address}</div>
 					</div>
 				</div>
+				<div class="serviceFinally__form_content">
+					<div class="serviceFinally__form_content__block fic">
+						<div class="serviceFinally__form_content__title">${draft.procedure.title}</div>
+						<div class="serviceFinally__form_content__price">${price} ₽${appliedPromo ? ' <span style="text-decoration:line-through;color:#999;font-size:14px;">' + originalPrice + ' ₽</span>' : ''}</div>
+					</div>
+					<div class="serviceFinally__form_content__block fic">
+						<div class="serviceFinally__form_content__items fic">
+							<div class="accordion__block_master">${draft.specialist.full_name}</div>
+						</div>
+						<div class="serviceFinally__form_content__item fic">
+							<div class="serviceFinally__form_content__time">${draft.time}</div>
+							<div class="serviceFinally__form_content__date">${draft.date}</div>
+						</div>
+					</div>
+				</div>
 			</div>
-		</div>
-	`);
+		`);
+	}
+
+	renderSummary();
 	$('#bookingForm').show();
+
+	$('#applyPromo').on('click', function () {
+		const code = $('input[name="promo_code"]').val();
+		const $info = $('#promoInfo').hide().text('');
+		const $error = $('#promoError').hide().text('');
+		if (!code) {
+			appliedPromo = null;
+			renderSummary();
+			return;
+		}
+		$.ajax({
+			url: '/api/promo/check/',
+			method: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({code: code}),
+			headers: {'X-CSRFToken': getCookie('csrftoken')},
+		})
+		.done(function (data) {
+			appliedPromo = data;
+			renderSummary();
+			$info.text('Промокод применён: скидка ' + data.discount_percent + '%').show();
+		})
+		.fail(function (xhr) {
+			appliedPromo = null;
+			renderSummary();
+			let msg = 'Промокод недействителен';
+			if (xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
+			$error.text(msg).show();
+		});
+	});
 
 	$('#bookingForm').on('submit', function (e) {
 		e.preventDefault();
@@ -99,15 +163,22 @@ $(function () {
 		const pad = n => String(n).padStart(2, '0');
 		const endAt = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
 
-		$.post('/api/bookings/', {
-			salon: draft.salon.id,
-			procedure: draft.procedure.id,
-			specialist: draft.specialist.id,
-			customer_name: $('input[name="customer_name"]').val(),
-			phone: $('input[name="phone"]').val(),
-			question: $('textarea[name="question"]').val(),
-			start_at: startAt,
-			end_at: endAt,
+		$.ajax({
+			url: '/api/bookings/',
+			method: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				salon: draft.salon.id,
+				procedure: draft.procedure.id,
+				specialist: draft.specialist.id,
+				customer_name: $('input[name="customer_name"]').val(),
+				phone: $('input[name="phone"]').val(),
+				question: $('textarea[name="question"]').val(),
+				start_at: startAt,
+				end_at: endAt,
+				promo_code: $('input[name="promo_code"]').val(),
+			}),
+			headers: {'X-CSRFToken': getCookie('csrftoken')},
 		})
 			.done(function () {
 				sessionStorage.removeItem('bc_booking_draft');

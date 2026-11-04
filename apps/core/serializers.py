@@ -5,6 +5,7 @@ from .models import (
     Booking,
     Procedure,
     ProcedureOffering,
+    PromoCode,
     Salon,
     Specialist,
 )
@@ -86,6 +87,10 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
+    promo_code = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = Booking
         fields = [
@@ -99,11 +104,25 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             "end_at",
             "promo_code",
         ]
+        extra_kwargs = {"promo_code": {"required": False, "allow_null": True}}
 
     def validate(self, data):
         specialist = data.get("specialist")
         salon = data.get("salon")
         start_at = data.get("start_at")
+        promo_code_input = data.pop("promo_code", None) or self.initial_data.get("promo_code")
+
+        if promo_code_input:
+            code = str(promo_code_input).strip().upper()
+            try:
+                promo = PromoCode.objects.get(code=code)
+            except PromoCode.DoesNotExist as err:
+                raise serializers.ValidationError("Промокод не найден") from err
+            if not promo.is_valid_today():
+                raise serializers.ValidationError("Промокод недействителен")
+            data["promo_code_obj"] = promo
+        elif promo_code_input == "":
+            data["promo_code_obj"] = None
 
         if not specialist:
             raise serializers.ValidationError("Мастер не указан")
