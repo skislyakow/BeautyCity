@@ -1,7 +1,11 @@
+import contextlib
 import json
+import logging
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.timezone import now
@@ -12,6 +16,12 @@ from yookassa import Payment as YooPayment
 
 from .models import Booking
 
+logger = logging.getLogger(__name__)
+
+
+class PaymentVerificationError(Exception):
+    """Не удалось проверить платёж в ЮKassa."""
+
 
 def _configure_yookassa():
     if not settings.YOOKASSA_SHOP_ID or not settings.YOOKASSA_SECRET_KEY:
@@ -21,10 +31,83 @@ def _configure_yookassa():
     return True
 
 
+def _find_payment(payment_id):
+    if not _configure_yookassa():
+        raise PaymentVerificationError("ЮKassa не настроена")
+    try:
+        return YooPayment.find_one(payment_id)
+    except Exception as exc:
+        logger.exception("Не удалось получить платёж %s из ЮKassa", payment_id)
+        raise PaymentVerificationError("Не удалось проверить платёж") from exc
+
+
+def _metadata_matches(payment, bookings):
+    """Сверяет metadata платежа с записями, если metadata есть."""
+    metadata = getattr(payment, "metadata", None) or {}
+    if not isinstance(metadata, dict):
+        return False
+
+    actual = {str(booking.id) for booking in bookings}
+    booking_id = metadata.get("booking_id")
+    booking_ids = metadata.get("booking_ids")
+
+    if booking_ids:
+        expected = {part.strip() for part in str(booking_ids).split(",") if part.strip()}
+        return expected == actual
+    if booking_id is not None:
+        return {str(booking_id)} == actual
+    # Старые платежи создавались без metadata — для них достаточно сверки суммы.
+    return True
+
+
+def _confirm_paid_bookings(payment_id):
+    """Проверяет платёж через API ЮKassa и подтверждает связанные записи."""
+    payment = _find_payment(payment_id)
+    if getattr(payment, "status", None) != "succeeded":
+        return False
+
+    try:
+        paid_amount = Decimal(str(payment.amount.value))
+    except (AttributeError, InvalidOperation, TypeError, ValueError) as exc:
+        logger.warning("Платёж %s: не удалось прочитать сумму (%s)", payment_id, exc)
+        return False
+
+    with transaction.atomic():
+        bookings = list(Booking.objects.select_for_update().filter(payment_id=payment_id))
+        if not bookings:
+            logger.warning("Платёж %s: связанные записи не найдены", payment_id)
+            return False
+
+        expected_amount = sum((booking.price_final for booking in bookings), Decimal("0"))
+        if paid_amount != expected_amount:
+            logger.warning(
+                "Платёж %s: сумма %s не совпадает с суммой записей %s",
+                payment_id,
+                paid_amount,
+                expected_amount,
+            )
+            return False
+
+        if not _metadata_matches(payment, bookings):
+            logger.warning("Платёж %s: metadata не совпадает с записями", payment_id)
+            return False
+
+        active = [booking for booking in bookings if booking.status != Booking.Status.CANCELED]
+        if not active:
+            return False
+
+        for booking in active:
+            if booking.status != Booking.Status.CONFIRMED:
+                booking.status = Booking.Status.CONFIRMED
+                booking.save(update_fields=["status"])
+
+        return all(booking.status == Booking.Status.CONFIRMED for booking in active)
+
+
 def create_payment(request, booking_id):
     """Одиночная оплата — без изменений, уже работает."""
     booking = get_object_or_404(Booking, id=booking_id)
-    if booking.status == "confirmed":
+    if booking.status == Booking.Status.CONFIRMED:
         return redirect("/?error=already_paid")
     if not _configure_yookassa():
         return JsonResponse(
@@ -59,24 +142,35 @@ def create_payment(request, booking_id):
 
 
 @csrf_exempt
+@require_POST
 def yookassa_webhook(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            payment_id = data.get("object", {}).get("id")
-            status = data.get("object", {}).get("status")
-            if status == "succeeded":
-                bookings = Booking.objects.filter(payment_id=payment_id)
-                if bookings.exists():
-                    updated_count = bookings.update(status="confirmed")
-                    print(f" Массово оплачено записей: {updated_count}")
-                else:
-                    print(" Записи не найдены")
-            return JsonResponse({"status": "ok"})
-        except Exception as e:
-            print(f"Ошибка: {e}")
-            return JsonResponse({"error": str(e)}, status=400)
-    return JsonResponse({"error": "POST required"}, status=400)
+    """Уведомление ЮKassa.
+
+    Телу запроса не доверяем: статус и сумму перепроверяем через API ЮKassa.
+    """
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        logger.warning("Некорректный JSON от ЮKassa: %s", exc)
+        return JsonResponse({"error": "invalid json"}, status=400)
+
+    payment = data.get("object") or {}
+    payment_id = payment.get("id")
+    if payment.get("status") != "succeeded":
+        return JsonResponse({"status": "ignored"})
+    if not payment_id:
+        return JsonResponse({"error": "payment id required"}, status=400)
+
+    # Не дёргаем API ЮKassa для платежей, которых нет в нашей базе.
+    if not Booking.objects.filter(payment_id=payment_id).exists():
+        return JsonResponse({"status": "ignored"})
+
+    try:
+        confirmed = _confirm_paid_bookings(payment_id)
+    except PaymentVerificationError:
+        return JsonResponse({"error": "payment verification failed"}, status=503)
+
+    return JsonResponse({"status": "ok" if confirmed else "ignored"})
 
 
 @login_required(login_url="/")
@@ -84,7 +178,7 @@ def yookassa_webhook(request):
 def create_bulk_payment(request):
     user_phone = request.user.username
     unpaid_bookings = Booking.objects.filter(phone=user_phone, start_at__gte=now()).exclude(
-        status__in=["confirmed", "canceled"]
+        status__in=[Booking.Status.CONFIRMED, Booking.Status.CANCELED]
     )
 
     if not unpaid_bookings.exists():
@@ -113,6 +207,7 @@ def create_bulk_payment(request):
                     "return_url": f"{settings.SITE_URL}/payment-success-bulk/?booking_ids={','.join(map(str, booking_ids))}",
                 },
                 "description": f"Массовая оплата записей ({unpaid_bookings.count()} шт.)",
+                "metadata": {"booking_ids": ",".join(map(str, booking_ids))},
             }
         )
     except Exception as exc:
@@ -127,25 +222,21 @@ def create_bulk_payment(request):
 
 
 def payment_success(request, booking_id):
-    """Возврат с одиночной оплаты — без изменений."""
+    """Возврат с одиночной оплаты: подтверждаем только после проверки в ЮKassa."""
     booking = get_object_or_404(Booking, id=booking_id)
 
-    if booking.status != "confirmed" and booking.payment_id and _configure_yookassa():
-        try:
-            payment = YooPayment.find_one(booking.payment_id)
-            if payment.status == "succeeded":
-                booking.status = Booking.Status.CONFIRMED
-                booking.save()
-        except Exception:
-            pass
+    if booking.status != Booking.Status.CONFIRMED and booking.payment_id:
+        with contextlib.suppress(PaymentVerificationError):
+            _confirm_paid_bookings(booking.payment_id)
+        booking.refresh_from_db(fields=["status"])
 
-    if booking.status == "confirmed":
+    if booking.status == Booking.Status.CONFIRMED:
         return redirect("/notes/?payment=success")
     return redirect("/notes/?payment=pending")
 
 
 def payment_success_bulk(request):
-    """Возврат с массовой оплаты — новая вьюха, раньше её не было вообще."""
+    """Возврат с массовой оплаты: подтверждаем только после проверки в ЮKassa."""
     ids_param = request.GET.get("booking_ids", "")
     try:
         booking_ids = [int(x) for x in ids_param.split(",") if x]
@@ -156,15 +247,11 @@ def payment_success_bulk(request):
     if not bookings.exists():
         return redirect("/notes/?payment=unknown")
 
-    payment_id = bookings.first().payment_id
-    if payment_id and not bookings.filter(status="confirmed").exists() and _configure_yookassa():
-        try:
-            payment = YooPayment.find_one(payment_id)
-            if payment.status == "succeeded":
-                bookings.update(status="confirmed")
-        except Exception:
-            pass
+    payment_ids = set(bookings.exclude(payment_id="").values_list("payment_id", flat=True))
+    if len(payment_ids) == 1:
+        with contextlib.suppress(PaymentVerificationError):
+            _confirm_paid_bookings(payment_ids.pop())
 
-    if bookings.filter(status="confirmed").exists():
+    if bookings.filter(status=Booking.Status.CONFIRMED).exists():
         return redirect("/notes/?payment=success")
     return redirect("/notes/?payment=pending")
