@@ -86,7 +86,7 @@ $(function () {
 	let appliedPromo = null;
 
 	function renderSummary() {
-		const originalPrice = Number(draft.procedure.base_price || 0);
+		const originalPrice = Number(draft.procedure.offering_price || draft.procedure.price || draft.procedure.base_price || 0);
 		let price = originalPrice;
 		if (appliedPromo && appliedPromo.discount_percent) {
 			price = Math.round(originalPrice * (100 - appliedPromo.discount_percent) / 100 * 100) / 100;

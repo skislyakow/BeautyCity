@@ -133,16 +133,21 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         if not start_at:
             raise serializers.ValidationError("Время не указано")
 
+        procedure = data.get("procedure")
         if not specialist.salons.filter(salon=salon).exists():
             raise serializers.ValidationError(
                 f"Мастер {specialist.full_name} не работает в салоне {salon.name}"
+            )
+        if procedure and not specialist.procedures.filter(pk=procedure.pk).exists():
+            raise serializers.ValidationError(
+                f"Мастер {specialist.full_name} не выполняет услугу {procedure.title}"
             )
 
         date = start_at.date()
         time = start_at.time()
 
         slots = get_available_slots(
-            salon=salon, specialist=specialist, procedure=data.get("procedure"), date=date
+            salon=salon, specialist=specialist, procedure=procedure, date=date
         )
 
         if time not in slots:

@@ -118,7 +118,7 @@ $(function () {
 					</div>
 				`);
 				$item.on('click', function () {
-					state.procedure = procedure;
+					state.procedure = Object.assign({}, procedure, { price: offering.price, offering_price: offering.price });
 					state.specialist = null;
 					$list.find('.accordion__block_item').css('font-weight', 'normal');
 					$item.css('font-weight', 'bold');
