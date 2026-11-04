@@ -3,11 +3,10 @@ from random import uniform
 from time import sleep
 
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, OperationalError, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.timezone import now
 from django.views.decorators.http import require_POST
@@ -24,7 +23,7 @@ from .models import (
     Specialist,
 )
 from .payment_views import create_payment
-from .phone_auth import get_user_phone, login_by_phone
+from .phone_auth import get_guest_booking_ids, get_user_phone
 from .serializers import (
     BookingCreateSerializer,
     BookingSerializer,
@@ -200,11 +199,17 @@ def create_booking(request):
         return result
 
     booking = result
-    user = login_by_phone(request, booking.phone)
 
-    if booking.customer_name and not user.first_name:
-        user.first_name = booking.customer_name
-        user.save(update_fields=["first_name"])
+    if request.user.is_authenticated and booking.customer_name and not request.user.first_name:
+        request.user.first_name = booking.customer_name
+        request.user.save(update_fields=["first_name"])
+
+    # Не входим в аккаунт по телефону из формы: код не подтверждён.
+    # Даём текущей сессии доступ только к этой записи.
+    guest_booking_ids = get_guest_booking_ids(request)
+    if booking.id not in guest_booking_ids:
+        guest_booking_ids.append(booking.id)
+    request.session["guest_booking_ids"] = guest_booking_ids[-10:]
 
     return Response(BookingSerializer(booking).data, status=201)
 
@@ -222,7 +227,6 @@ def my_bookings(request):
 
 @api_view(["POST"])
 def initiate_payment(request, booking_id):
-    get_object_or_404(Booking, id=booking_id)
     return create_payment(request, booking_id)
 
 
@@ -263,29 +267,41 @@ def service_finally(request):
     return render(request, "serviceFinally.html")
 
 
-@login_required(login_url="/")  #
 def notes(request):
-    user_phone = get_user_phone(request.user)
+    guest_booking_ids = get_guest_booking_ids(request)
+
+    if request.user.is_authenticated:
+        access_filter = Q(phone=get_user_phone(request.user))
+        if guest_booking_ids:
+            access_filter |= Q(id__in=guest_booking_ids)
+        bookings = Booking.objects.filter(access_filter)
+    else:
+        if not guest_booking_ids:
+            return redirect("/")
+        bookings = Booking.objects.filter(id__in=guest_booking_ids)
+        if not bookings.exists():
+            return redirect("/")
+
     current_time = now()
-
     upcoming_bookings = (
-        Booking.objects.filter(phone=user_phone, start_at__gte=current_time)
-        .exclude(status="canceled")
-        .order_by("start_at")
-    )  # Если статус хранится через Choices, используй Booking.Status.CANCELED
-
+        bookings.filter(start_at__gte=current_time).exclude(status="canceled").order_by("start_at")
+    )
     past_bookings = (
-        Booking.objects.filter(phone=user_phone, start_at__lt=current_time)
-        .exclude(status="canceled")
-        .order_by("-start_at")
+        bookings.filter(start_at__lt=current_time).exclude(status="canceled").order_by("-start_at")
     )
 
     unpaid_sum = sum(b.price_final for b in upcoming_bookings if b.status != "confirmed")
+    is_guest = not request.user.is_authenticated
+    guest_phone = ""
+    if is_guest:
+        guest_phone = bookings.order_by("start_at").values_list("phone", flat=True).first() or ""
 
     context = {
         "upcoming_bookings": upcoming_bookings,
         "past_bookings": past_bookings,
         "unpaid_sum": unpaid_sum,
+        "is_guest": is_guest,
+        "guest_phone": guest_phone,
     }
     return render(request, "notes.html", context)
 

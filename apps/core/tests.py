@@ -264,6 +264,40 @@ class BookingCreationTests(TransactionTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Booking.objects.filter(specialist=self.specialist).count(), 1)
 
+    def test_creates_booking_without_logging_in(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload()),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertEqual(self.client.session["guest_booking_ids"], [response.json()["id"]])
+        self.assertFalse(User.objects.filter(username="+79990000000").exists())
+
+    def test_guest_notes_show_only_created_booking(self):
+        other = self._create_booking(start_at=self.start_at + timedelta(hours=2))
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload()),
+            content_type="application/json",
+        )
+        created_id = response.json()["id"]
+
+        notes = self.client.get("/notes/")
+
+        self.assertEqual(notes.status_code, 200)
+        self.assertContains(notes, f"Запись №{created_id}")
+        self.assertNotContains(notes, f"Запись №{other.id}")
+
+    def test_notes_without_guest_session_redirects_home(self):
+        response = self.client.get("/notes/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/")
+
     def test_rejects_overlap_even_if_slot_list_is_stale(self):
         self._create_booking()
 
@@ -499,3 +533,47 @@ class MyBookingsAuthTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual({item["id"] for item in response.json()}, {booking.id})
+
+    def test_notes_shows_only_own_phone_bookings(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get("/notes/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"Запись №{self.own_booking.id}")
+        self.assertNotContains(response, f"Запись №{self.other_booking.id}")
+
+    @patch("apps.core.payment_views._configure_yookassa", return_value=False)
+    def test_guest_can_pay_only_created_booking(self, _configure_yookassa):
+        session = self.client.session
+        session["guest_booking_ids"] = [self.own_booking.id]
+        session.save()
+
+        denied = self.client.post(f"/api/payments/{self.other_booking.id}/")
+        self.assertEqual(denied.status_code, 403)
+
+        allowed = self.client.post(f"/api/payments/{self.own_booking.id}/")
+        self.assertEqual(allowed.status_code, 400)
+
+    def test_authenticated_user_cannot_pay_other_users_booking(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(f"/api/payments/{self.other_booking.id}/")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_sms_login_clears_guest_booking_ids(self):
+        session = self.client.session
+        session["auth_phone"] = "+79990000001"
+        session["auth_code"] = "1234"
+        session["guest_booking_ids"] = [self.own_booking.id]
+        session.save()
+
+        response = self.client.post(
+            "/phone-confirm/",
+            {"num1": "1", "num2": "2", "num3": "3", "num4": "4"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("guest_booking_ids", self.client.session)
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.id)

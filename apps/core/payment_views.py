@@ -15,7 +15,7 @@ from yookassa import Configuration
 from yookassa import Payment as YooPayment
 
 from .models import Booking
-from .phone_auth import get_user_phone
+from .phone_auth import get_guest_booking_ids, get_user_phone
 
 logger = logging.getLogger(__name__)
 
@@ -105,9 +105,20 @@ def _confirm_paid_bookings(payment_id):
         return all(booking.status == Booking.Status.CONFIRMED for booking in active)
 
 
+def has_booking_access(request, booking):
+    """Доступ к записи: владелец по телефону или гостевая сессия после записи."""
+    if request.user.is_authenticated and get_user_phone(request.user) == booking.phone:
+        return True
+    return booking.id in get_guest_booking_ids(request)
+
+
 def create_payment(request, booking_id):
-    """Одиночная оплата — без изменений, уже работает."""
     booking = get_object_or_404(Booking, id=booking_id)
+    if not has_booking_access(request, booking):
+        return JsonResponse(
+            {"status": "error", "message": "Нет доступа к записи"},
+            status=403,
+        )
     if booking.status == Booking.Status.CONFIRMED:
         return redirect("/?error=already_paid")
     if not _configure_yookassa():

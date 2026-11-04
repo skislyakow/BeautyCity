@@ -15,6 +15,14 @@ def get_user_phone(user):
     return ((profile.phone if profile else "") or user.username or "").strip()
 
 
+def get_guest_booking_ids(request):
+    """ID записей, созданных в текущей сессии без входа в аккаунт."""
+    raw = request.session.get("guest_booking_ids", [])
+    if not isinstance(raw, list):
+        return []
+    return [int(item) for item in raw if str(item).isdigit()]
+
+
 @require_POST
 def phone_login_view(request):
     phone = request.POST.get("tel", "").strip()
@@ -47,11 +55,12 @@ def phone_confirm_view(request):
     login_by_phone(request, auth_phone)
     request.session.pop("auth_phone", None)
     request.session.pop("auth_code", None)
+    request.session.pop("guest_booking_ids", None)
     return JsonResponse({"status": "ok", "phone": auth_phone})
 
 
 def login_by_phone(request, phone):
-    """Тихий вход по номеру телефона (без SMS-кода). Используется после создания записи."""
+    """Вход по номеру телефона после успешной проверки SMS-кода."""
     phone = (phone or "").strip()
 
     profile = CustomerProfile.objects.filter(phone=phone).select_related("user").first()
