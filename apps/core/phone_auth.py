@@ -9,6 +9,12 @@ from .models import CustomerProfile
 TESTING_CODE = "1234"
 
 
+def get_user_phone(user):
+    """Телефон пользователя: профиль, затем username для старых phone-аккаунтов."""
+    profile = getattr(user, "profile", None)
+    return ((profile.phone if profile else "") or user.username or "").strip()
+
+
 @require_POST
 def phone_login_view(request):
     phone = request.POST.get("tel", "").strip()

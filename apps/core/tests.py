@@ -6,12 +6,14 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.db import IntegrityError, close_old_connections, transaction
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
 from apps.core.models import (
     Booking,
+    CustomerProfile,
     Procedure,
     ProcedureOffering,
     Salon,
@@ -413,3 +415,87 @@ class BookingCreationTests(TransactionTestCase):
         self.assertEqual(statuses.count(201), 1, statuses)
         self.assertTrue(all(status in (201, 400, 409) for status in statuses), statuses)
         self.assertEqual(Booking.objects.filter(specialist=self.specialist).count(), 1, statuses)
+
+
+class MyBookingsAuthTests(TestCase):
+    def setUp(self):
+        self.salon = Salon.objects.create(name="Салон", address="Адрес")
+        self.procedure = Procedure.objects.create(
+            title="Стрижка",
+            duration_minutes=60,
+            base_price=Decimal("1000.00"),
+        )
+        self.user = User.objects.create_user(username="+79990000001", password="pass")
+        CustomerProfile.objects.create(user=self.user, phone="+79990000001")
+        self.other = User.objects.create_user(username="+79990000002", password="pass")
+        CustomerProfile.objects.create(user=self.other, phone="+79990000002")
+
+        self.own_booking = self._create_booking(
+            phone="+79990000001",
+            start_at=timezone.now() + timedelta(days=1),
+        )
+        self.other_booking = self._create_booking(
+            phone="+79990000002",
+            start_at=timezone.now() + timedelta(days=2),
+        )
+        self.url = "/api/my-bookings/"
+
+    def _create_booking(self, *, phone, start_at):
+        return Booking.objects.create(
+            salon=self.salon,
+            procedure=self.procedure,
+            customer_name="Клиент",
+            phone=phone,
+            start_at=start_at,
+            end_at=start_at + timedelta(hours=1),
+            price_original=Decimal("1000.00"),
+            price_final=Decimal("1000.00"),
+        )
+
+    def test_requires_authentication(self):
+        response = self.client.get(self.url)
+
+        self.assertIn(response.status_code, (401, 403))
+
+    def test_returns_only_own_bookings(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.id})
+
+    def test_ignores_phone_query_parameter(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.url, {"phone": "+79990000002"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.id})
+
+    def test_uses_profile_phone_instead_of_username(self):
+        user = User.objects.create_user(username="client@example.com", password="pass")
+        CustomerProfile.objects.create(user=user, phone="+79990000003")
+        booking = self._create_booking(
+            phone="+79990000003",
+            start_at=timezone.now() + timedelta(days=3),
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({item["id"] for item in response.json()}, {booking.id})
+
+    def test_falls_back_to_username_without_profile(self):
+        user = User.objects.create_user(username="+79990000004", password="pass")
+        booking = self._create_booking(
+            phone="+79990000004",
+            start_at=timezone.now() + timedelta(days=4),
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({item["id"] for item in response.json()}, {booking.id})

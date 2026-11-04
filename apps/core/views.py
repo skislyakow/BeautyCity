@@ -11,7 +11,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.utils.timezone import now
 from django.views.decorators.http import require_POST
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import (
@@ -23,7 +24,7 @@ from .models import (
     Specialist,
 )
 from .payment_views import create_payment
-from .phone_auth import login_by_phone
+from .phone_auth import get_user_phone, login_by_phone
 from .serializers import (
     BookingCreateSerializer,
     BookingSerializer,
@@ -209,10 +210,11 @@ def create_booking(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def my_bookings(request):
-    phone = request.GET.get("phone")
+    phone = get_user_phone(request.user)
     if not phone:
-        return Response({"error": "Укажите телефон"}, status=400)
+        return Response({"error": "Телефон не указан"}, status=400)
     bookings = Booking.objects.filter(phone=phone).order_by("-start_at")
     serializer = BookingSerializer(bookings, many=True)
     return Response(serializer.data)
@@ -263,7 +265,7 @@ def service_finally(request):
 
 @login_required(login_url="/")  #
 def notes(request):
-    user_phone = request.user.username
+    user_phone = get_user_phone(request.user)
     current_time = now()
 
     upcoming_bookings = (

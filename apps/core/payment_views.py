@@ -15,6 +15,7 @@ from yookassa import Configuration
 from yookassa import Payment as YooPayment
 
 from .models import Booking
+from .phone_auth import get_user_phone
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +177,7 @@ def yookassa_webhook(request):
 @login_required(login_url="/")
 @require_POST
 def create_bulk_payment(request):
-    user_phone = request.user.username
+    user_phone = get_user_phone(request.user)
     unpaid_bookings = Booking.objects.filter(phone=user_phone, start_at__gte=now()).exclude(
         status__in=[Booking.Status.CONFIRMED, Booking.Status.CANCELED]
     )

@@ -13,7 +13,7 @@
   Отдельного issue tracker / spec-файла на момент ревью нет.
 - **Состояние проекта на момент ревью:** uv + pre-commit настроены, тестов — 0.
 
-> **Статус:** P0-5, P0-1 и P0-2 закрыты.
+> **Статус:** P0-5, P0-1, P0-2 и P0-3 закрыты.
 
 ## Как воспроизвести ревью
 
@@ -67,15 +67,21 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   `select_for_update()` не даёт блокировки. Внутри `transaction.atomic()`
   повторно проверяется пересечение интервалов (`is_slot_available()`), добавлен
   частичный `UniqueConstraint` на активные `(specialist, start_at)`, конфликт
-  возвращает `409`. Тесты: `apps/core/tests.py` (21 тест, включая
-  параллельный сценарий).
+  возвращает `409`. Тесты: `apps/core/tests.py` (включая параллельный
+  сценарий).
 
-- [ ] **3. Авторизация `/api/my-bookings/`.**
+- [x] **3. Авторизация `/api/my-bookings/`.**
   Сейчас отдаёт записи по `?phone=` без авторизации.
-  Файл: `apps/core/views.py:166`.
+  Файл: `apps/core/views.py:214`.
   Сделать: `@login_required`/DRF permissions, телефон брать из
   `request.user`/`CustomerProfile`, параметр `phone` убрать.
   Готово, когда чужой телефон не отдаёт записи.
+  **Сделано:** endpoint требует `IsAuthenticated`; телефон берётся через
+  `get_user_phone()` (`CustomerProfile.phone`, затем `username` для старых
+  phone-аккаунтов), `?phone=` игнорируется. Тот же helper используют `notes`,
+  контекст-процессор и массовая оплата. Тесты: `apps/core/tests.py`
+  (`MyBookingsAuthTests`, 5 тестов: без авторизации, только свои записи,
+  игнорирование `?phone=`, профиль вместо username, fallback на username).
 
 - [ ] **4. Убрать тихий авто-логин после записи.**
   Сейчас `login_by_phone(request, booking.phone)` логинит без SMS-кода и даёт
@@ -166,9 +172,10 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
 - [ ] **21. Обновить `AGENTS.md`:** структура `accounts/salons/...`,
   `Appointment`, Celery/Redis/`Notification`, VK/email-auth — уже не
   соответствуют коду. Либо актуализировать, либо удалить устаревшие разделы.
-- [ ] **22. Добавить тесты.** Сейчас 21 тест покрывает вебхук/оплату и
-  защиту от двойной записи (`apps/core/tests.py`); создания записи, конфликта
-  слотов, промокодов и доступа к `/api/my-bookings/` тесты пока не покрывают.
+- [ ] **22. Добавить тесты.** Сейчас 26 тестов покрывают вебхук/оплату,
+  создание записи, конфликт слотов, защиту от двойной записи и авторизацию
+  `/api/my-bookings/` (`apps/core/tests.py`); промокоды, отзывы, чаевые и
+  отмена записи тестами пока не покрыты.
 
 ## Standards — полный отчёт
 
@@ -220,8 +227,10 @@ README описывает новую структуру, поэтому AGENTS.m
   `admin.html:12-60`.
 - **Primitive Obsession / Repeated Switches** — строковый `"confirmed"` вместо
   `Booking.Status.CONFIRMED` в `payment_views.py:27,71,133,142,160,168`,
-  `views.py:188,252`; `request.user.username` используется как телефон, хотя
+  `views.py:188,252`; `request.user.username` использовался как телефон, хотя
   есть `CustomerProfile.phone` (`views.py:220`, `payment_views.py:85`).
+  **Статус:** телефонная часть закрыта в P0-3 через `get_user_phone()`;
+  строковые статусы остаются.
 - **Divergent Change** — `context_processors.py:19-20` пишет `user.first_name`
   на каждом рендере, дублируя backfill в `views.py:158-160`.
 - **Middle Man** — `views.py:176-178` `initiate_payment` только повторно
@@ -282,7 +291,8 @@ Risks & Mitigations). Устаревшая структура `accounts/salons/.
   P0-2: блокировка мастера + проверка пересечения без привязки к салону.
 - AGENTS: `GET /api/client/appointments/` — фактический
   `/api/my-bookings/?phone=` не требует авторизации и отдаёт записи по любому
-  телефону.
+  телефону. **Исправлено в P0-3:** endpoint требует авторизацию, `?phone=`
+  игнорируется, телефон берётся из профиля пользователя.
 - `yookassa_webhook` — `csrf_exempt` без проверки подписи/IP: любой POST со
   `status:"succeeded"` подтверждает запись.
 - Авто-логин по телефону из формы даёт доступ к чужим записям и оплате без
