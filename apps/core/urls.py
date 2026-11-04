@@ -1,39 +1,48 @@
 from django.urls import path
-from apps.core import views, phone_auth
-from apps.core.payment_views import create_bulk_payment, yookassa_webhook, payment_success, payment_success_bulk, create_payment
+
+from apps.core import phone_auth, views
+from apps.core.payment_views import (
+    create_bulk_payment,
+    create_payment,
+    payment_success,
+    payment_success_bulk,
+    yookassa_webhook,
+)
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('service/', views.service, name='service'),
-    path('service-finally/', views.service_finally, name='service_finally'),
-    path('notes/', views.notes, name='notes'),
-    path('dashboard/', views.admin_panel, name='admin'),
-    path('admin-panel/', views.admin_panel, name='admin_panel'),
-    path('pay-all-unpaid/', create_bulk_payment, name='pay_all_unpaid'),
-
+    path("", views.index, name="index"),
+    path("service/", views.service, name="service"),
+    path("service-finally/", views.service_finally, name="service_finally"),
+    path("notes/", views.notes, name="notes"),
+    path("dashboard/", views.admin_panel, name="admin"),
+    path("admin-panel/", views.admin_panel, name="admin_panel"),
+    path("pay-all-unpaid/", create_bulk_payment, name="pay_all_unpaid"),
     # Авторизация по телефону (SMS-код заглушка 1234)
-    path('phone-login/', phone_auth.phone_login_view, name='phone_login'),
-    path('phone-confirm/', phone_auth.phone_confirm_view, name='phone_confirm'),
-    path('logout/', phone_auth.logout_view, name='logout'),
-    path('callback/', views.callback_request, name='callback'),
-    path('callback/<int:pk>/done/', views.callback_done, name='callback_done'),
-
+    path("phone-login/", phone_auth.phone_login_view, name="phone_login"),
+    path("phone-confirm/", phone_auth.phone_confirm_view, name="phone_confirm"),
+    path("logout/", phone_auth.logout_view, name="logout"),
+    path("callback/", views.callback_request, name="callback"),
+    path("callback/<int:pk>/done/", views.callback_done, name="callback_done"),
     # API
-    path('api/salons/', views.salon_list, name='api_salons'),
-    path('api/procedures/', views.procedure_list, name='api_procedures'),
-    path('api/specialists/', views.specialist_list, name='api_specialists'),
-    path('api/procedure-offerings/', views.procedure_offering_list, name='api_offerings'),
-    path('api/salons/<int:pk>/procedures/', views.salon_procedures, name='api_salon_procedures'),
-    path('api/salons/<int:pk>/specialists/', views.salon_specialists, name='api_salon_specialists'),
-    path('api/specialists/<int:pk>/procedures/', views.specialist_procedures, name='api_specialist_procedures'),
-    path('api/specialists/<int:pk>/salons/', views.specialist_salons, name='api_specialist_salons'),
-    path('api/slots/', views.available_slots, name='api_slots'),
-    path('api/bookings/', views.create_booking, name='api_create_booking'),
-    path('api/my-bookings/', views.my_bookings, name='api_my_bookings'),
-    path('api/payments/<int:booking_id>/', views.initiate_payment, name='api_payment'),
-    path('payment-success/<int:booking_id>/', payment_success, name='payment_success'),
-    path('payments/<int:booking_id>/pay/', create_payment, name='create_payment'),
-    path('payment-success-bulk/', payment_success_bulk, name='payment_success_bulk'),
-    path('api/payments/webhook/', yookassa_webhook, name='yookassa_webhook'),
-    path('api/admin/stats/', views.admin_stats, name='api_admin_stats'),
+    path("api/salons/", views.salon_list, name="api_salons"),
+    path("api/procedures/", views.procedure_list, name="api_procedures"),
+    path("api/specialists/", views.specialist_list, name="api_specialists"),
+    path("api/procedure-offerings/", views.procedure_offering_list, name="api_offerings"),
+    path("api/salons/<int:pk>/procedures/", views.salon_procedures, name="api_salon_procedures"),
+    path("api/salons/<int:pk>/specialists/", views.salon_specialists, name="api_salon_specialists"),
+    path(
+        "api/specialists/<int:pk>/procedures/",
+        views.specialist_procedures,
+        name="api_specialist_procedures",
+    ),
+    path("api/specialists/<int:pk>/salons/", views.specialist_salons, name="api_specialist_salons"),
+    path("api/slots/", views.available_slots, name="api_slots"),
+    path("api/bookings/", views.create_booking, name="api_create_booking"),
+    path("api/my-bookings/", views.my_bookings, name="api_my_bookings"),
+    path("api/payments/<int:booking_id>/", views.initiate_payment, name="api_payment"),
+    path("payment-success/<int:booking_id>/", payment_success, name="payment_success"),
+    path("payments/<int:booking_id>/pay/", create_payment, name="create_payment"),
+    path("payment-success-bulk/", payment_success_bulk, name="payment_success_bulk"),
+    path("api/payments/webhook/", yookassa_webhook, name="yookassa_webhook"),
+    path("api/admin/stats/", views.admin_stats, name="api_admin_stats"),
 ]

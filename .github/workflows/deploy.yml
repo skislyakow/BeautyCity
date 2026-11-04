@@ -24,12 +24,15 @@ jobs:
           script: |
             cd /var/www/beauty
             git pull origin main
-            source .venv/bin/activate
-            pip install -r requirements.txt --quiet
-            python manage.py collectstatic --noinput
-            python manage.py migrate --noinput
-            python manage.py seed_db
-            python manage.py ensure_admin
+            if ! command -v uv >/dev/null 2>&1; then
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              export PATH="$HOME/.local/bin:$PATH"
+            fi
+            uv sync --frozen --no-dev
+            uv run --frozen --no-dev python manage.py collectstatic --noinput
+            uv run --frozen --no-dev python manage.py migrate --noinput
+            uv run --frozen --no-dev python manage.py seed_db
+            uv run --frozen --no-dev python manage.py ensure_admin
             set_env() {
               local key="$1"; local val="$2"
               if [ -z "$val" ]; then

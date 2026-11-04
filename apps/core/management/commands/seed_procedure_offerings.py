@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from apps.core.models import Salon, Procedure, ProcedureOffering
+
+from apps.core.models import Procedure, ProcedureOffering, Salon
 
 
 class Command(BaseCommand):
@@ -10,10 +11,14 @@ class Command(BaseCommand):
         procedures = Procedure.objects.all()
 
         if not salons.exists():
-            self.stdout.write(self.style.WARNING("Нет ни одного салона — сначала запусти seed_demo_data"))
+            self.stdout.write(
+                self.style.WARNING("Нет ни одного салона — сначала запусти seed_demo_data")
+            )
             return
         if not procedures.exists():
-            self.stdout.write(self.style.WARNING("Нет ни одной услуги — сначала запусти seed_demo_data"))
+            self.stdout.write(
+                self.style.WARNING("Нет ни одной услуги — сначала запусти seed_demo_data")
+            )
             return
 
         created_count = 0

@@ -1,8 +1,12 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator, FileExtensionValidator
+from django.core.validators import (
+    FileExtensionValidator,
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models
 from django.utils import timezone
-
 
 phone_validator = RegexValidator(
     regex=r"^\+?\d{10,15}$",
@@ -34,7 +38,9 @@ class Salon(models.Model):
 
 class Procedure(models.Model):
     title = models.CharField("Процедура", max_length=200)
-    image = models.FileField("Фото услуги", upload_to="procedures/",
+    image = models.FileField(
+        "Фото услуги",
+        upload_to="procedures/",
         blank=True,
         null=True,
         validators=[FileExtensionValidator(["svg", "png", "jpg", "jpeg", "webp"])],
@@ -56,6 +62,7 @@ class ProcedureOffering(models.Model):
     """
     Цена процедуры может отличаться по салонам.
     """
+
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="offerings")
     procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, related_name="offerings")
     price = models.DecimalField("Цена в салоне", max_digits=10, decimal_places=2)
@@ -73,7 +80,9 @@ class ProcedureOffering(models.Model):
 
 class Specialist(models.Model):
     full_name = models.CharField("ФИО", max_length=200)
-    photo = models.FileField("Фото мастера", upload_to="specialists/",
+    photo = models.FileField(
+        "Фото мастера",
+        upload_to="specialists/",
         blank=True,
         null=True,
         validators=[FileExtensionValidator(["svg", "png", "jpg", "jpeg", "webp"])],
@@ -101,6 +110,7 @@ class SpecialistSalon(models.Model):
     """
     В каких салонах работает специалист (многие-ко-многим).
     """
+
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name="salons")
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="specialists")
 
@@ -120,6 +130,7 @@ class WorkShift(models.Model):
     Расписание: когда специалист работает в конкретном салоне.
     По нему можно показывать "какие специалисты когда работают".
     """
+
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="shifts")
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name="shifts")
     date = models.DateField("Дата")
@@ -133,7 +144,7 @@ class WorkShift(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["salon", "specialist", "date", "start_time", "end_time"],
-                name="uniq_shift_exact"
+                name="uniq_shift_exact",
             )
         ]
 
@@ -146,11 +157,11 @@ class PromoCode(models.Model):
     Промокоды: kid20 (20%), birthday (15%), man10 (10% в декабре).
     Правила лучше держать простыми на MVP: процент + период действия + флаг активен.
     """
+
     code = models.CharField("Промокод", max_length=30, unique=True)
     description = models.CharField("Описание", max_length=300, blank=True)
     discount_percent = models.PositiveSmallIntegerField(
-        "Скидка, %",
-        validators=[MinValueValidator(1), MaxValueValidator(100)]
+        "Скидка, %", validators=[MinValueValidator(1), MaxValueValidator(100)]
     )
     is_active = models.BooleanField("Активен", default=True)
     valid_from = models.DateField("Действует с", blank=True, null=True)
@@ -170,22 +181,26 @@ class PromoCode(models.Model):
             return False
         if self.valid_from and today < self.valid_from:
             return False
-        if self.valid_to and today > self.valid_to:
-            return False
-        return True
+        return not (self.valid_to and today > self.valid_to)
 
 
 class ConsentDocument(models.Model):
-    title = models.CharField("Название", max_length=200, default="Согласие на обработку персональных данных")
+    title = models.CharField(
+        "Название", max_length=200, default="Согласие на обработку персональных данных"
+    )
     file = models.FileField("PDF файл", upload_to="consents/")
     is_active = models.BooleanField("Активный", default=True)
     uploaded_at = models.DateTimeField("Загружен", auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
 
 class ConsentAcceptance(models.Model):
     """
     Фиксация согласия (для регистрации или оформления записи).
     """
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -195,7 +210,9 @@ class ConsentAcceptance(models.Model):
         verbose_name="Пользователь",
     )
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator], blank=True)
-    document = models.ForeignKey(ConsentDocument, on_delete=models.PROTECT, related_name="acceptances")
+    document = models.ForeignKey(
+        ConsentDocument, on_delete=models.PROTECT, related_name="acceptances"
+    )
     accepted_at = models.DateTimeField("Принято", auto_now_add=True)
 
     class Meta:
@@ -211,7 +228,10 @@ class CustomerProfile(models.Model):
     """
     Удобно для подсчёта регистраций и хранения телефона.
     """
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator], blank=True)
     created_at = models.DateTimeField("Создан", auto_now_add=True)
 
@@ -235,7 +255,9 @@ class Booking(models.Model):
 
     salon = models.ForeignKey(Salon, on_delete=models.PROTECT, related_name="bookings")
     procedure = models.ForeignKey(Procedure, on_delete=models.PROTECT, related_name="bookings")
-    specialist = models.ForeignKey(Specialist, on_delete=models.PROTECT, related_name="bookings", null=True, blank=True)
+    specialist = models.ForeignKey(
+        Specialist, on_delete=models.PROTECT, related_name="bookings", null=True, blank=True
+    )
 
     customer_name = models.CharField("Имя клиента", max_length=120, blank=True)
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator])
@@ -253,7 +275,7 @@ class Booking(models.Model):
 
     created_at = models.DateTimeField("Создана", auto_now_add=True)
 
-    payment_id = models.CharField('ID платежа', max_length=100, blank=True)
+    payment_id = models.CharField("ID платежа", max_length=100, blank=True)
 
     class Meta:
         verbose_name = "Запись"
@@ -280,6 +302,7 @@ class SiteSettings(models.Model):
     Чтобы "показать номер менеджера" и хранить 1-2 глобальные настройки.
     Ожидается одна запись.
     """
+
     manager_phone = models.CharField("Телефон менеджера", max_length=20, blank=True)
 
     class Meta:

@@ -1,20 +1,26 @@
-from rest_framework import serializers
 from django.db.models import Avg
+from rest_framework import serializers
 
-from .models import Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon, WorkShift, Booking, PromoCode
+from .models import (
+    Booking,
+    Procedure,
+    ProcedureOffering,
+    Salon,
+    Specialist,
+)
 from .slots import get_available_slots
 
 
 class SalonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Salon
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ProcedureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Procedure
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SpecialistSerializer(serializers.ModelSerializer):
@@ -25,15 +31,22 @@ class SpecialistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialist
         fields = [
-            'id', 'full_name', 'photo', 'bio', 'experience',
-            'is_active', 'procedures', 'rating', 'reviews_count',
+            "id",
+            "full_name",
+            "photo",
+            "bio",
+            "experience",
+            "is_active",
+            "procedures",
+            "rating",
+            "reviews_count",
         ]
 
     def get_rating(self, obj):
-        agg = obj.reviews.aggregate(avg=Avg('rating'))
-        if agg['avg'] is None:
+        agg = obj.reviews.aggregate(avg=Avg("rating"))
+        if agg["avg"] is None:
             return None
-        return round(agg['avg'], 1)
+        return round(agg["avg"], 1)
 
     def get_reviews_count(self, obj):
         return obj.reviews.count()
@@ -45,7 +58,7 @@ class ProcedureOfferingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcedureOffering
-        fields = ['id', 'salon', 'procedure', 'price']
+        fields = ["id", "salon", "procedure", "price"]
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -56,11 +69,19 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'customer_name', 'phone', 'question',
-            'salon', 'procedure', 'specialist',
-            'start_at', 'end_at',
-            'status', 'source', 'price_final',
-            'created_at'
+            "id",
+            "customer_name",
+            "phone",
+            "question",
+            "salon",
+            "procedure",
+            "specialist",
+            "start_at",
+            "end_at",
+            "status",
+            "source",
+            "price_final",
+            "created_at",
         ]
 
 
@@ -68,35 +89,42 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'salon', 'procedure', 'specialist',
-            'customer_name', 'phone', 'question',
-            'start_at', 'end_at',
-            'promo_code'
+            "salon",
+            "procedure",
+            "specialist",
+            "customer_name",
+            "phone",
+            "question",
+            "start_at",
+            "end_at",
+            "promo_code",
         ]
 
     def validate(self, data):
-        specialist = data.get('specialist')
-        salon = data.get('salon')
-        start_at = data.get('start_at')
+        specialist = data.get("specialist")
+        salon = data.get("salon")
+        start_at = data.get("start_at")
 
         if not specialist:
-            raise serializers.ValidationError(f"Мастер не указан")
+            raise serializers.ValidationError("Мастер не указан")
 
         if not salon:
-            raise serializers.ValidationError(f"Салон не указан")
+            raise serializers.ValidationError("Салон не указан")
 
         if not start_at:
-            raise serializers.ValidationError(f"Время не указано")
+            raise serializers.ValidationError("Время не указано")
 
         if not specialist.salons.filter(salon=salon).exists():
             raise serializers.ValidationError(
-                f"Мастер {specialist.full_name} не работает в салоне {salon.name}")
+                f"Мастер {specialist.full_name} не работает в салоне {salon.name}"
+            )
 
         date = start_at.date()
         time = start_at.time()
 
-        slots = get_available_slots(salon=salon, specialist=specialist, procedure=data.get('procedure'),
-                                    date=date)
+        slots = get_available_slots(
+            salon=salon, specialist=specialist, procedure=data.get("procedure"), date=date
+        )
 
         if time not in slots:
             raise serializers.ValidationError(f"Время {time} уже занято")

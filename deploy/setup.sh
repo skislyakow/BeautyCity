@@ -6,7 +6,12 @@ REPO_URL="git@github.com:skislyakow/BeautyCity.git"
 
 echo "=== 1. System packages ==="
 apt update
-apt install -y python3.11 python3.11-venv python3.11-dev nginx certbot python3-certbot-nginx git
+apt install -y nginx certbot python3-certbot-nginx git curl
+
+if ! command -v uv >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 
 echo "=== 2. Create project directory ==="
 mkdir -p $PROJECT_DIR
@@ -21,10 +26,7 @@ fi
 
 echo "=== 4. Virtual env ==="
 cd $PROJECT_DIR
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+uv sync --frozen --no-dev
 
 echo "=== 5. .env ==="
 if [ ! -f ".env" ]; then
@@ -37,9 +39,8 @@ ENVEOF
 fi
 
 echo "=== 6. Collect static & migrate ==="
-source .venv/bin/activate
-python manage.py collectstatic --noinput
-python manage.py migrate --noinput
+uv run --frozen --no-dev python manage.py collectstatic --noinput
+uv run --frozen --no-dev python manage.py migrate --noinput
 
 echo "=== 7. Copy systemd services ==="
 cp deploy/beauty.service /etc/systemd/system/

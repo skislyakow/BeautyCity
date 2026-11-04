@@ -25,7 +25,7 @@
 
 ## ⚙️ Технический стек
 
-- **Бэкенд**: Python 3.13, Django 6.0, Django REST Framework
+- **Бэкенд**: Python 3.14, Django 6, Django REST Framework
 - **База данных**: SQLite (локально)
 - **Фронтенд**: Django Templates + jQuery, данные подгружаются через собственный JSON API (без SPA-фреймворка)
 - **Платежи**: ЮKassa (yookassa-python)
@@ -51,8 +51,11 @@
 │   └── beauty_city/                # настройки проекта (settings, urls, wsgi)
 ├── static/                         # css, js, img (вёрстка)
 ├── templates/                      # HTML-шаблоны + templates/partials/ (переиспользуемые блоки)
+├── deploy/                         # конфиги nginx, systemd и скрипт первоначальной настройки VPS
 ├── manage.py
-└── requirements.txt
+├── pyproject.toml                  # зависимости и настройки ruff
+├── uv.lock                         # зафиксированные версии зависимостей
+└── .pre-commit-config.yaml         # хуки, запускаемые перед коммитом
 ```
 
 ## 🛠️ Установка и настройка
@@ -63,17 +66,20 @@ git clone https://github.com/<ваш-репозиторий>/BeautyCity.git
 cd BeautyCity
 ```
 
-#### 2. Создайте и активируйте виртуальное окружение:
+#### 2. Установите [uv](https://docs.astral.sh/uv/) (если ещё не установлен):
 ```bash
-python -m venv .venv
-.venv\Scripts\activate   # на Windows
-source .venv/bin/activate   # на Linux / macOS
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Linux / macOS
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-#### 3. Установите зависимости:
+#### 3. Создайте окружение и установите зависимости:
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
+`uv` сам скачает Python нужной версии (указана в `.python-version`), создаст `.venv` и установит все зависимости из `uv.lock`. Отдельно создавать venv и ставить пакеты через `pip` не нужно.
 
 #### 4. Настройте переменные окружения. Создайте файл `.env` в корне проекта:
 ```dotenv
@@ -90,26 +96,40 @@ SITE_URL=http://127.0.0.1:8000
 
 #### 5. Примените миграции и создайте суперпользователя:
 ```bash
-python manage.py migrate
-python manage.py createsuperuser
+uv run python manage.py migrate
+uv run python manage.py createsuperuser
 ```
 
 #### 6. Заполните базу демо-данными:
 ```bash
-python manage.py seed_db
+uv run python manage.py seed_db
 ```
 Команда создаёт салоны, услуги, мастеров с привязкой к конкретным салонам/услугам и цены по салонам — сразу в правильном виде, без ручной сборки через админку.
 
 #### 7. Сгенерируйте рабочие смены мастеров на ближайшие 30 дней (нужно, чтобы форма записи показывала свободное время):
 ```bash
-python manage.py generate_shifts
+uv run python manage.py generate_shifts
 ```
 
 #### 8. Запустите сервер:
 ```bash
-python manage.py runserver
+uv run python manage.py runserver
 ```
 Откройте [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+
+## 🧹 Pre-commit
+
+В проекте настроены хуки [pre-commit](https://pre-commit.com/): проверка YAML/TOML, лишних пробелов, больших файлов, а также линтинг и форматирование Python через [ruff](https://docs.astral.sh/ruff/).
+
+Один раз после клонирования включите хуки:
+```bash
+uv run pre-commit install
+```
+
+Теперь при каждом `git commit` хуки проверят изменённые файлы и при необходимости исправят форматирование. Прогнать проверки по всему проекту вручную:
+```bash
+uv run pre-commit run --all-files
+```
 
 ## 🔑 Вход в личный кабинет
 

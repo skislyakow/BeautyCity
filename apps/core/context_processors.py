@@ -9,15 +9,14 @@ def account_name(request):
 
     if not user.first_name:
         latest = (
-            Booking.objects
-            .filter(phone=user.username)
-            .exclude(customer_name='')
-            .order_by('-created_at')
-            .values_list('customer_name', flat=True)
+            Booking.objects.filter(phone=user.username)
+            .exclude(customer_name="")
+            .order_by("-created_at")
+            .values_list("customer_name", flat=True)
             .first()
         )
         if latest:
             user.first_name = latest
-            user.save(update_fields=['first_name'])
+            user.save(update_fields=["first_name"])
 
-    return {'account_name': user.first_name or user.username}
+    return {"account_name": user.first_name or user.username}

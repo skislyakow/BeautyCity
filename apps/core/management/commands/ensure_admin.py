@@ -3,7 +3,6 @@ from django.core.management.base import BaseCommand
 
 from apps.core.models import CustomerProfile
 
-
 ADMIN_USERNAME = "Admin"
 ADMIN_PASSWORD = "Admin"
 ADMIN_PHONE = "+79999999999"
@@ -35,7 +34,13 @@ class Command(BaseCommand):
             profile.save(update_fields=["phone"])
 
         if created:
-            self.stdout.write(self.style.SUCCESS(f"Системный администратор создан: {ADMIN_USERNAME}"))
+            self.stdout.write(
+                self.style.SUCCESS(f"Системный администратор создан: {ADMIN_USERNAME}")
+            )
         else:
-            self.stdout.write(self.style.SUCCESS(f"Системный администратор обновлён: {ADMIN_USERNAME}"))
-        self.stdout.write(f"Логин: {ADMIN_USERNAME} / пароль: {ADMIN_PASSWORD} / телефон: {ADMIN_PHONE}")
+            self.stdout.write(
+                self.style.SUCCESS(f"Системный администратор обновлён: {ADMIN_USERNAME}")
+            )
+        self.stdout.write(
+            f"Логин: {ADMIN_USERNAME} / пароль: {ADMIN_PASSWORD} / телефон: {ADMIN_PHONE}"
+        )

@@ -1,6 +1,8 @@
 from datetime import datetime, time, timedelta
-from django.utils.timezone import make_aware, now, localtime
-from .models import WorkShift, Booking
+
+from django.utils.timezone import localtime, make_aware, now
+
+from .models import Booking, WorkShift
 
 SLOT_STEP_MINUTES = 30
 

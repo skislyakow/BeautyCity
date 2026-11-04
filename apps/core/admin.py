@@ -2,10 +2,20 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
-    Salon, Procedure, ProcedureOffering,
-    Specialist, SpecialistSalon, WorkShift,
-    PromoCode, ConsentDocument, ConsentAcceptance,
-    CustomerProfile, Booking, SiteSettings, CallbackRequest, Review
+    Booking,
+    CallbackRequest,
+    ConsentAcceptance,
+    ConsentDocument,
+    CustomerProfile,
+    Procedure,
+    ProcedureOffering,
+    PromoCode,
+    Review,
+    Salon,
+    SiteSettings,
+    Specialist,
+    SpecialistSalon,
+    WorkShift,
 )
 
 
@@ -19,7 +29,9 @@ def image_preview(obj, field_name: str, size: int = 60):
         return "—"
     return format_html(
         '<img src="{}" style="width:{}px;height:{}px;object-fit:cover;border-radius:8px;" />',
-        url, size, size
+        url,
+        size,
+        size,
     )
 
 
@@ -32,12 +44,13 @@ class SalonAdmin(admin.ModelAdmin):
 
     def preview(self, obj):
         return image_preview(obj, "image", size=44)
+
     preview.short_description = "Фото"
 
     def preview_large(self, obj):
         return image_preview(obj, "image", size=180)
-    preview_large.short_description = "Превью"
 
+    preview_large.short_description = "Превью"
 
 
 @admin.register(Procedure)
@@ -48,12 +61,13 @@ class ProcedureAdmin(admin.ModelAdmin):
 
     def preview(self, obj):
         return image_preview(obj, "image", size=44)
+
     preview.short_description = "Фото"
 
     def preview_large(self, obj):
         return image_preview(obj, "image", size=180)
-    preview_large.short_description = "Превью"
 
+    preview_large.short_description = "Превью"
 
 
 @admin.register(ProcedureOffering)
@@ -72,12 +86,13 @@ class SpecialistAdmin(admin.ModelAdmin):
 
     def preview(self, obj):
         return image_preview(obj, "photo", size=44)
+
     preview.short_description = "Фото"
 
     def preview_large(self, obj):
         return image_preview(obj, "photo", size=180)
-    preview_large.short_description = "Превью"
 
+    preview_large.short_description = "Превью"
 
 
 @admin.register(SpecialistSalon)
@@ -126,7 +141,16 @@ class CustomerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("start_at", "salon", "procedure", "specialist", "phone", "status", "source", "price_final")
+    list_display = (
+        "start_at",
+        "salon",
+        "procedure",
+        "specialist",
+        "phone",
+        "status",
+        "source",
+        "price_final",
+    )
     list_filter = ("status", "source", "salon", "procedure")
     search_fields = ("phone", "customer_name", "specialist__full_name")
     date_hierarchy = "start_at"

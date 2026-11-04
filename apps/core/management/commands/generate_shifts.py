@@ -1,6 +1,8 @@
-from datetime import timedelta, time
+from datetime import time, timedelta
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from apps.core.models import Specialist, SpecialistSalon, WorkShift
 
 
@@ -11,7 +13,9 @@ class Command(BaseCommand):
         specialists = list(Specialist.objects.all())
 
         if not specialists:
-            self.stdout.write(self.style.WARNING("Нет ни одного специалиста. Сначала добавьте мастеров."))
+            self.stdout.write(
+                self.style.WARNING("Нет ни одного специалиста. Сначала добавьте мастеров.")
+            )
             return
 
         today = timezone.localdate()
@@ -37,10 +41,12 @@ class Command(BaseCommand):
                     defaults={
                         "start_time": start,
                         "end_time": end,
-                    }
+                    },
                 )
 
                 if created:
                     created_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Готово! Успешно создано новых смен: {created_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(f"Готово! Успешно создано новых смен: {created_count}")
+        )

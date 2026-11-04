@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from apps.core.models import Salon, Procedure, Specialist
 
+from apps.core.models import Procedure, Salon, Specialist
 
 # специальность (ключевые слова в bio) -> ключевые слова в названии услуги (Procedure.title)
 SPECIALTY_KEYWORDS = {
@@ -14,7 +14,9 @@ SPECIALTY_KEYWORDS = {
 
 
 class Command(BaseCommand):
-    help = "Привязывает мастеров к услугам по совпадению ключевых слов в bio, вне зависимости от имён"
+    help = (
+        "Привязывает мастеров к услугам по совпадению ключевых слов в bio, вне зависимости от имён"
+    )
 
     def handle(self, *args, **options):
         salons = list(Salon.objects.all())
@@ -34,28 +36,33 @@ class Command(BaseCommand):
                     matched_keywords.update(procedure_kws)
 
             if not matched_keywords:
-                self.stdout.write(self.style.WARNING(
-                    f'{specialist.full_name} (bio="{specialist.bio}"): специальность не распознана, пропускаю — заполни вручную в /admin/'
-                ))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'{specialist.full_name} (bio="{specialist.bio}"): специальность не распознана, пропускаю — заполни вручную в /admin/'
+                    )
+                )
                 continue
 
             matched_procedures = [
-                p for p in procedures
-                if any(kw in p.title.lower() for kw in matched_keywords)
+                p for p in procedures if any(kw in p.title.lower() for kw in matched_keywords)
             ]
 
             if not matched_procedures:
-                self.stdout.write(self.style.WARNING(
-                    f'{specialist.full_name}: под специальность "{specialist.bio}" не нашлось подходящих услуг'
-                ))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'{specialist.full_name}: под специальность "{specialist.bio}" не нашлось подходящих услуг'
+                    )
+                )
                 continue
 
             specialist.procedures.set(matched_procedures)
             for salon in salons:
                 specialist.salons.get_or_create(salon=salon)
 
-            self.stdout.write(self.style.SUCCESS(
-                f"{specialist.full_name} ({specialist.bio}) -> {', '.join(p.title for p in matched_procedures)}"
-            ))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"{specialist.full_name} ({specialist.bio}) -> {', '.join(p.title for p in matched_procedures)}"
+                )
+            )
 
         self.stdout.write(self.style.SUCCESS("Готово!"))

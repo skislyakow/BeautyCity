@@ -1,5 +1,5 @@
 import os
-from datetime import date, datetime, timedelta, time
+from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.core.files import File
@@ -9,56 +9,252 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 
 from apps.core.models import (
-    Salon, Procedure, ProcedureOffering, Specialist, SpecialistSalon,
-    WorkShift, PromoCode, Booking, SiteSettings, CustomerProfile,
-    ConsentDocument, ConsentAcceptance, Review,
+    Booking,
+    ConsentDocument,
+    Procedure,
+    ProcedureOffering,
+    PromoCode,
+    Review,
+    Salon,
+    SiteSettings,
+    Specialist,
+    SpecialistSalon,
+    WorkShift,
 )
-
 
 STATIC_IMG_DIR = settings.BASE_DIR / "static" / "img"
 
 SALONS = [
-    {"name": "BeautyCity Пушкинская", "address": "ул. Пушкинская, д. 78А", "phone": "+79179023800", "image": "salons/salon1.svg"},
-    {"name": "BeautyCity Ленина", "address": "ул. Ленина, д. 211", "phone": "+79179023800", "image": "salons/salon2.svg"},
-    {"name": "BeautyCity Красная", "address": "ул. Красная, д. 10", "phone": "+79179023800", "image": "salons/salon3.svg"},
+    {
+        "name": "BeautyCity Пушкинская",
+        "address": "ул. Пушкинская, д. 78А",
+        "phone": "+79179023800",
+        "image": "salons/salon1.svg",
+    },
+    {
+        "name": "BeautyCity Ленина",
+        "address": "ул. Ленина, д. 211",
+        "phone": "+79179023800",
+        "image": "salons/salon2.svg",
+    },
+    {
+        "name": "BeautyCity Красная",
+        "address": "ул. Красная, д. 10",
+        "phone": "+79179023800",
+        "image": "salons/salon3.svg",
+    },
 ]
 
 # Картинки услуг по дизайну (вёрстка+фронтенд v2/index.html, servicesSlider):
 # service1 = Дневной макияж, service2 = Маникюр, service3 = Укладка волос,
 # service4 = Укладка волос (3 000), service5 = Педикюр, service6 = Окрашивание волос.
 PROCEDURES = [
-    {"title": "Окрашивание волос", "duration_minutes": 120, "base_price": "5000.00", "description": "Стойкое окрашивание волос с восстановлением", "image": "services/service6.svg"},
-    {"title": "Укладка волос", "duration_minutes": 60, "base_price": "1500.00", "description": "Укладка феном на укладочные средства", "image": "services/service3.svg"},
-    {"title": "Маникюр. Классический", "duration_minutes": 60, "base_price": "1400.00", "description": "Классический маникюр с покрытием", "image": "services/service2.svg"},
-    {"title": "Педикюр", "duration_minutes": 60, "base_price": "1400.00", "description": "Комплексный уход за стопами и ногтями", "image": "services/service5.svg"},
-    {"title": "Наращивание ногтей", "duration_minutes": 90, "base_price": "3000.00", "description": "Моделирование и наращивание ногтей", "image": "services/service2.svg"},
-    {"title": "Дневной макияж", "duration_minutes": 45, "base_price": "1400.00", "description": "Естественный макияж для дня", "image": "services/service1.svg"},
-    {"title": "Свадебный макияж", "duration_minutes": 90, "base_price": "3000.00", "description": "Стойкий макияж для особого дня", "image": "services/service1.svg"},
-    {"title": "Вечерний макияж", "duration_minutes": 60, "base_price": "2000.00", "description": "Яркий макияж для вечернего выхода", "image": "services/service1.svg"},
+    {
+        "title": "Окрашивание волос",
+        "duration_minutes": 120,
+        "base_price": "5000.00",
+        "description": "Стойкое окрашивание волос с восстановлением",
+        "image": "services/service6.svg",
+    },
+    {
+        "title": "Укладка волос",
+        "duration_minutes": 60,
+        "base_price": "1500.00",
+        "description": "Укладка феном на укладочные средства",
+        "image": "services/service3.svg",
+    },
+    {
+        "title": "Маникюр. Классический",
+        "duration_minutes": 60,
+        "base_price": "1400.00",
+        "description": "Классический маникюр с покрытием",
+        "image": "services/service2.svg",
+    },
+    {
+        "title": "Педикюр",
+        "duration_minutes": 60,
+        "base_price": "1400.00",
+        "description": "Комплексный уход за стопами и ногтями",
+        "image": "services/service5.svg",
+    },
+    {
+        "title": "Наращивание ногтей",
+        "duration_minutes": 90,
+        "base_price": "3000.00",
+        "description": "Моделирование и наращивание ногтей",
+        "image": "services/service2.svg",
+    },
+    {
+        "title": "Дневной макияж",
+        "duration_minutes": 45,
+        "base_price": "1400.00",
+        "description": "Естественный макияж для дня",
+        "image": "services/service1.svg",
+    },
+    {
+        "title": "Свадебный макияж",
+        "duration_minutes": 90,
+        "base_price": "3000.00",
+        "description": "Стойкий макияж для особого дня",
+        "image": "services/service1.svg",
+    },
+    {
+        "title": "Вечерний макияж",
+        "duration_minutes": 60,
+        "base_price": "2000.00",
+        "description": "Яркий макияж для вечернего выхода",
+        "image": "services/service1.svg",
+    },
 ]
 
 SPECIALISTS = [
     # Пушкинская (avatar 1-6)
-    {"full_name": "Елизавета Лапина", "bio": "Мастер маникюра", "experience": "3 г. 10 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/1.svg", "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"]},
-    {"full_name": "Анна Сергеева", "bio": "Парикмахер", "experience": "4 г. 9 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/2.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Ева Колесова", "bio": "Визажист", "experience": "1 г. 2 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/3.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"]},
-    {"full_name": "Мария Суворова", "bio": "Стилист", "experience": "1 г. 1 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/4.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Мария Максимова", "bio": "Визажист", "experience": "3 г. 1 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/5.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"]},
-    {"full_name": "Анастасия Сергеева", "bio": "Визажист", "experience": "2 г. 5 мес.", "salon_idx": 0, "avatar": "masters/avatar/pushkinskaya/6.svg", "procedure_titles": ["Дневной макияж", "Вечерний макияж"]},
+    {
+        "full_name": "Елизавета Лапина",
+        "bio": "Мастер маникюра",
+        "experience": "3 г. 10 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/1.svg",
+        "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"],
+    },
+    {
+        "full_name": "Анна Сергеева",
+        "bio": "Парикмахер",
+        "experience": "4 г. 9 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/2.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Ева Колесова",
+        "bio": "Визажист",
+        "experience": "1 г. 2 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/3.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"],
+    },
+    {
+        "full_name": "Мария Суворова",
+        "bio": "Стилист",
+        "experience": "1 г. 1 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/4.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Мария Максимова",
+        "bio": "Визажист",
+        "experience": "3 г. 1 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/5.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"],
+    },
+    {
+        "full_name": "Анастасия Сергеева",
+        "bio": "Визажист",
+        "experience": "2 г. 5 мес.",
+        "salon_idx": 0,
+        "avatar": "masters/avatar/pushkinskaya/6.svg",
+        "procedure_titles": ["Дневной макияж", "Вечерний макияж"],
+    },
     # Ленина (avatar 1-6)
-    {"full_name": "Дарья Мартынова", "bio": "Мастер маникюра", "experience": "2 г. 0 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/1.svg", "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"]},
-    {"full_name": "Амина Абрамова", "bio": "Парикмахер", "experience": "3 г. 3 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/2.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Милана Романова", "bio": "Визажист", "experience": "1 г. 8 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/3.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"]},
-    {"full_name": "Диана Чернова", "bio": "Стилист", "experience": "4 г. 0 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/4.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Полина Лукьянова", "bio": "Визажист", "experience": "2 г. 2 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/5.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж"]},
-    {"full_name": "Вера Дмитриева", "bio": "Визажист", "experience": "1 г. 6 мес.", "salon_idx": 1, "avatar": "masters/avatar/lenina/6.svg", "procedure_titles": ["Дневной макияж", "Вечерний макияж"]},
+    {
+        "full_name": "Дарья Мартынова",
+        "bio": "Мастер маникюра",
+        "experience": "2 г. 0 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/1.svg",
+        "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"],
+    },
+    {
+        "full_name": "Амина Абрамова",
+        "bio": "Парикмахер",
+        "experience": "3 г. 3 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/2.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Милана Романова",
+        "bio": "Визажист",
+        "experience": "1 г. 8 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/3.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"],
+    },
+    {
+        "full_name": "Диана Чернова",
+        "bio": "Стилист",
+        "experience": "4 г. 0 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/4.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Полина Лукьянова",
+        "bio": "Визажист",
+        "experience": "2 г. 2 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/5.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж"],
+    },
+    {
+        "full_name": "Вера Дмитриева",
+        "bio": "Визажист",
+        "experience": "1 г. 6 мес.",
+        "salon_idx": 1,
+        "avatar": "masters/avatar/lenina/6.svg",
+        "procedure_titles": ["Дневной макияж", "Вечерний макияж"],
+    },
     # Красная (avatar 1-6)
-    {"full_name": "Зоя Матвеева", "bio": "Универсал", "experience": "5 г. 0 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/1.svg", "procedure_titles": ["Маникюр. Классический", "Педикюр", "Укладка волос"]},
-    {"full_name": "Мария Родина", "bio": "Мастер маникюра", "experience": "3 г. 6 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/2.svg", "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"]},
-    {"full_name": "Дарья Попова", "bio": "Парикмахер", "experience": "2 г. 9 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/3.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Ева Семенова", "bio": "Визажист", "experience": "1 г. 4 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/4.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"]},
-    {"full_name": "Вера Романова", "bio": "Стилист", "experience": "3 г. 0 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/5.svg", "procedure_titles": ["Окрашивание волос", "Укладка волос"]},
-    {"full_name": "Валерия Зуева", "bio": "Визажист", "experience": "2 г. 1 мес.", "salon_idx": 2, "avatar": "masters/avatar/krasnaya/6.svg", "procedure_titles": ["Дневной макияж", "Свадебный макияж"]},
+    {
+        "full_name": "Зоя Матвеева",
+        "bio": "Универсал",
+        "experience": "5 г. 0 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/1.svg",
+        "procedure_titles": ["Маникюр. Классический", "Педикюр", "Укладка волос"],
+    },
+    {
+        "full_name": "Мария Родина",
+        "bio": "Мастер маникюра",
+        "experience": "3 г. 6 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/2.svg",
+        "procedure_titles": ["Маникюр. Классический", "Педикюр", "Наращивание ногтей"],
+    },
+    {
+        "full_name": "Дарья Попова",
+        "bio": "Парикмахер",
+        "experience": "2 г. 9 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/3.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Ева Семенова",
+        "bio": "Визажист",
+        "experience": "1 г. 4 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/4.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж", "Вечерний макияж"],
+    },
+    {
+        "full_name": "Вера Романова",
+        "bio": "Стилист",
+        "experience": "3 г. 0 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/5.svg",
+        "procedure_titles": ["Окрашивание волос", "Укладка волос"],
+    },
+    {
+        "full_name": "Валерия Зуева",
+        "bio": "Визажист",
+        "experience": "2 г. 1 мес.",
+        "salon_idx": 2,
+        "avatar": "masters/avatar/krasnaya/6.svg",
+        "procedure_titles": ["Дневной макияж", "Свадебный макияж"],
+    },
 ]
 
 PROMO_CODES = [
@@ -86,8 +282,18 @@ CONSENT_TEXT_LINES = [
 ]
 
 REVIEW_AUTHORS = [
-    "Анна", "Мария", "Екатерина", "Ольга", "Наталья", "Ирина",
-    "Дарья", "Светлана", "Полина", "Ксения", "Виктория", "Елена",
+    "Анна",
+    "Мария",
+    "Екатерина",
+    "Ольга",
+    "Наталья",
+    "Ирина",
+    "Дарья",
+    "Светлана",
+    "Полина",
+    "Ксения",
+    "Виктория",
+    "Елена",
 ]
 
 REVIEW_TEXTS = [
@@ -192,7 +398,8 @@ def seed_offerings(salons, procedures):
         for procedure in procedures.values():
             price = procedure.base_price
             ProcedureOffering.objects.get_or_create(
-                salon=salon, procedure=procedure,
+                salon=salon,
+                procedure=procedure,
                 defaults={"price": price},
             )
 
@@ -213,7 +420,8 @@ def seed_specialists(salons, procedures):
                 specialist.procedures.add(procedures[title])
         salon = salons[sp_data["salon_idx"]]
         SpecialistSalon.objects.get_or_create(
-            specialist=specialist, salon=salon,
+            specialist=specialist,
+            salon=salon,
         )
 
     return Specialist.objects.all()
@@ -276,7 +484,8 @@ def seed_reviews(specialists):
 
 def seed_sitesettings():
     SiteSettings.objects.get_or_create(
-        pk=1, defaults={"manager_phone": "+79179023800"},
+        pk=1,
+        defaults={"manager_phone": "+79179023800"},
     )
 
 
