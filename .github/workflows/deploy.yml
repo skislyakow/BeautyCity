@@ -31,8 +31,8 @@ jobs:
             uv sync --frozen --no-dev
             uv run --frozen --no-dev python manage.py collectstatic --noinput
             uv run --frozen --no-dev python manage.py migrate --noinput
-            uv run --frozen --no-dev python manage.py seed_db
-            uv run --frozen --no-dev python manage.py ensure_admin
+            # Deploy must not mutate data: seed_db/ensure_admin are run manually
+            # (or via a separate one-off workflow), never on every push.
             set_env() {
               local key="$1"; local val="$2"
               if [ -z "$val" ]; then

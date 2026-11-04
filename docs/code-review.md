@@ -13,6 +13,8 @@
   Отдельного issue tracker / spec-файла на момент ревью нет.
 - **Состояние проекта на момент ревью:** uv + pre-commit настроены, тестов — 0.
 
+> **Статус:** P0-5 закрыт — деплой больше не запускает `seed_db`/`ensure_admin`.
+
 ## Как воспроизвести ревью
 
 ```bash
@@ -70,12 +72,17 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   Сделать: либо подтверждение кодом, либо отдельная сессия только для
   созданной записи. Готово, когда без кода нельзя открыть чужие записи.
 
-- [ ] **5. Убрать `seed_db` и `ensure_admin` из продакшн-деплоя.**
+- [x] **5. Убрать `seed_db` и `ensure_admin` из продакшн-деплоя.**
   Файл: `.github/workflows/deploy.yml:34-35`.
   Сейчас каждый push в `main` создаёт демо-записи и сбрасывает пароль
   `Admin/Admin` (`apps/core/management/commands/ensure_admin.py:7`).
   Сделать: только `migrate` + `collectstatic`; сиды и админа — вручную или
   через отдельный одноразовый workflow. Готово, когда деплой не трогает данные.
+  **Сделано:** `seed_db` и `ensure_admin` удалены из workflow; деплой теперь
+  выполняет только `collectstatic` + `migrate`. Ручной запуск на VPS:
+  `cd /var/www/beauty && uv run --frozen --no-dev python manage.py seed_db`,
+  администратор — через `createsuperuser` (не `ensure_admin` с паролем по
+  умолчанию).
 
 ### P1 — заявленные функции
 
