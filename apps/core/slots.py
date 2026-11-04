@@ -32,7 +32,6 @@ def get_available_slots(*, salon, specialist, procedure, date):
     day_end = make_aware(datetime.combine(date, time.max))
 
     bookings = Booking.objects.filter(
-        salon=salon,
         specialist=specialist,
         start_at__gte=day_start,
         start_at__lte=day_end,
@@ -71,3 +70,16 @@ def get_available_slots(*, salon, specialist, procedure, date):
 
     available_times.sort()
     return available_times
+
+
+def is_slot_available(*, specialist, start_at, end_at):
+    """Проверяет, что у мастера нет активной записи, пересекающейся по времени."""
+    return not (
+        Booking.objects.filter(
+            specialist=specialist,
+            start_at__lt=end_at,
+            end_at__gt=start_at,
+        )
+        .exclude(status=Booking.Status.CANCELED)
+        .exists()
+    )

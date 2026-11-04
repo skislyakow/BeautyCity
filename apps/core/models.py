@@ -96,6 +96,9 @@ class Specialist(models.Model):
     bio = models.TextField("Специальность", blank=True)
     experience = models.TextField("Стаж работы", blank=True)
     is_active = models.BooleanField("Активен", default=True)
+    # Счётчик используется как блокировка при создании записи: UPDATE строки
+    # сериализует конкурентные запросы к одному мастеру на SQLite и PostgreSQL.
+    booking_version = models.PositiveIntegerField("Версия бронирования", default=0, editable=False)
 
     class Meta:
         verbose_name = "Специалист"
@@ -285,6 +288,15 @@ class Booking(models.Model):
             models.Index(fields=["salon", "start_at"]),
             models.Index(fields=["specialist", "start_at"]),
             models.Index(fields=["phone", "start_at"]),
+        ]
+        constraints = [
+            # Защита от точного дубля на уровне БД. Пересечения с разным
+            # началом дополнительно проверяются под блокировкой мастера.
+            models.UniqueConstraint(
+                fields=["specialist", "start_at"],
+                condition=~models.Q(status="canceled"),
+                name="uniq_active_specialist_start",
+            )
         ]
 
     def __str__(self):

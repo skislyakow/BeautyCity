@@ -1,8 +1,11 @@
 from datetime import timedelta
+from random import uniform
+from time import sleep
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db import IntegrityError, OperationalError, transaction
+from django.db.models import F, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
@@ -29,7 +32,7 @@ from .serializers import (
     SalonSerializer,
     SpecialistSerializer,
 )
-from .slots import get_available_slots
+from .slots import get_available_slots, is_slot_available
 
 
 @api_view(["GET"])
@@ -128,16 +131,15 @@ def available_slots(request):
     return Response({"slots": slots})
 
 
-@api_view(["POST"])
-def create_booking(request):
-    data = request.data
-    serializer = BookingCreateSerializer(data=data)
+def _create_booking_once(request):
+    serializer = BookingCreateSerializer(data=request.data)
 
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
 
     salon = serializer.validated_data.get("salon")
     procedure = serializer.validated_data.get("procedure")
+    specialist = serializer.validated_data.get("specialist")
     start_at = serializer.validated_data.get("start_at")
 
     offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
@@ -147,12 +149,56 @@ def create_booking(request):
         )
     end_at = start_at + timedelta(minutes=procedure.duration_minutes)
 
-    booking = serializer.save(
-        price_original=offering.price,
-        price_final=offering.price,
-        end_at=end_at,
-    )
+    try:
+        with transaction.atomic():
+            # UPDATE строки мастера сериализует конкурентные бронирования:
+            # на PostgreSQL это блокировка строки, на SQLite — блокировка записи.
+            # select_for_update() на SQLite не работает, поэтому нужен реальный UPDATE.
+            locked = Specialist.objects.filter(pk=specialist.pk).update(
+                booking_version=F("booking_version") + 1
+            )
+            if not locked:
+                return Response({"error": "Мастер не найден"}, status=400)
 
+            # Повторная проверка уже под блокировкой: между валидацией
+            # сериализатора и этой транзакцией слот мог занять другой запрос.
+            if not is_slot_available(specialist=specialist, start_at=start_at, end_at=end_at):
+                return Response({"error": "Время уже занято"}, status=409)
+
+            booking = serializer.save(
+                price_original=offering.price,
+                price_final=offering.price,
+                end_at=end_at,
+            )
+    except IntegrityError:
+        return Response({"error": "Время уже занято"}, status=409)
+
+    return booking
+
+
+@api_view(["POST"])
+def create_booking(request):
+    result = None
+    for attempt in range(5):
+        try:
+            result = _create_booking_once(request)
+            break
+        except OperationalError as exc:
+            # SQLite может вернуть блокировку сразу (особенно в shared-cache).
+            # Повторяем запрос: конкурирующая транзакция успеет завершиться.
+            if "locked" not in str(exc).lower():
+                raise
+            if attempt == 4:
+                return Response(
+                    {"error": "Не удалось создать запись, попробуйте ещё раз"},
+                    status=503,
+                )
+            sleep(0.05 * (attempt + 1) + uniform(0, 0.02))
+
+    if isinstance(result, Response):
+        return result
+
+    booking = result
     user = login_by_phone(request, booking.phone)
 
     if booking.customer_name and not user.first_name:
