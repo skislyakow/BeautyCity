@@ -21,8 +21,10 @@ from .models import (
     Procedure,
     ProcedureOffering,
     PromoCode,
+    Review,
     Salon,
     Specialist,
+    Tip,
 )
 from .payment_views import create_payment
 from .phone_auth import get_guest_booking_ids, get_user_phone
@@ -224,6 +226,76 @@ def create_booking(request):
     request.session["guest_booking_ids"] = guest_booking_ids[-10:]
 
     return Response(BookingSerializer(booking).data, status=201)
+
+
+@api_view(["POST"])
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if (
+        request.user.is_authenticated
+        and request.user.is_staff
+        or request.user.is_authenticated
+        and get_user_phone(request.user) == booking.phone
+    ):
+        allowed = True
+    else:
+        allowed = booking.id in get_guest_booking_ids(request)
+    if not allowed:
+        return Response({"error": "Нет доступа к записи"}, status=403)
+    if booking.status == Booking.Status.CANCELED:
+        return Response({"status": "already_canceled"})
+    booking.status = Booking.Status.CANCELED
+    booking.save(update_fields=["status"])
+    return Response({"status": "canceled"})
+
+
+@api_view(["POST"])
+def create_review(request):
+    specialist_id = request.data.get("specialist") or request.data.get("specialist_id")
+    if not specialist_id:
+        return Response({"error": "Укажите мастера"}, status=400)
+    specialist = get_object_or_404(Specialist, id=specialist_id)
+    author_name = (request.data.get("author_name") or request.data.get("name") or "").strip()
+    text = (request.data.get("text") or request.data.get("comment") or "").strip()
+    try:
+        rating = int(request.data.get("rating", 5))
+    except TypeError, ValueError:
+        rating = 5
+    rating = max(1, min(5, rating))
+    review = Review.objects.create(
+        specialist=specialist,
+        author_name=author_name,
+        rating=rating,
+        text=text,
+    )
+    return Response({"id": review.id, "status": "created"}, status=201)
+
+
+@api_view(["POST"])
+def create_tip(request):
+    booking_id = request.data.get("booking") or request.data.get("booking_id")
+    if not booking_id:
+        return Response({"error": "Укажите запись"}, status=400)
+    booking = get_object_or_404(Booking, id=booking_id)
+    if (
+        request.user.is_authenticated
+        and request.user.is_staff
+        or request.user.is_authenticated
+        and get_user_phone(request.user) == booking.phone
+    ):
+        allowed = True
+    else:
+        allowed = booking.id in get_guest_booking_ids(request)
+    if not allowed:
+        return Response({"error": "Нет доступа к записи"}, status=403)
+    try:
+        amount = Decimal(str(request.data.get("amount", "0")).replace(",", "."))
+    except Exception:
+        return Response({"error": "Некорректная сумма"}, status=400)
+    if amount <= 0:
+        return Response({"error": "Сумма должна быть больше 0"}, status=400)
+    tip = Tip.objects.create(booking=booking, amount=amount)
+    return Response({"id": tip.id, "status": "created"}, status=201)
 
 
 @api_view(["GET"])

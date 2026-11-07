@@ -17,9 +17,11 @@ from apps.core.models import (
     Procedure,
     ProcedureOffering,
     PromoCode,
+    Review,
     Salon,
     Specialist,
     SpecialistSalon,
+    Tip,
     WorkShift,
 )
 from apps.core.slots import get_available_slots, is_slot_available
@@ -630,3 +632,91 @@ class MyBookingsAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("guest_booking_ids", self.client.session)
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.id)
+
+
+class ReviewTipCancelTests(TestCase):
+    def setUp(self):
+        self.salon = Salon.objects.create(name="Салон", address="Адрес")
+        self.procedure = Procedure.objects.create(
+            title="Стрижка",
+            duration_minutes=60,
+            base_price=Decimal("1000.00"),
+        )
+        self.specialist = Specialist.objects.create(full_name="Мастер")
+        self.user = User.objects.create_user(username="+79990000011", password="pass")
+        CustomerProfile.objects.create(user=self.user, phone="+79990000011")
+        self.other = User.objects.create_user(username="+79990000012", password="pass")
+        CustomerProfile.objects.create(user=self.other, phone="+79990000012")
+        start_at = timezone.now() + timedelta(days=1)
+        self.booking = Booking.objects.create(
+            salon=self.salon,
+            procedure=self.procedure,
+            specialist=self.specialist,
+            customer_name="Клиент",
+            phone="+79990000011",
+            start_at=start_at,
+            end_at=start_at + timedelta(hours=1),
+            price_original=Decimal("1000.00"),
+            price_final=Decimal("1000.00"),
+        )
+
+    def test_owner_can_cancel_booking(self):
+        self.client.force_login(self.user)
+        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        self.assertEqual(response.status_code, 200)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.Status.CANCELED)
+
+    def test_guest_session_can_cancel_booking(self):
+        session = self.client.session
+        session["guest_booking_ids"] = [self.booking.id]
+        session.save()
+        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        self.assertEqual(response.status_code, 200)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.Status.CANCELED)
+
+    def test_other_user_cannot_cancel_booking(self):
+        self.client.force_login(self.other)
+        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        self.assertEqual(response.status_code, 403)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.Status.NEW)
+
+    def test_create_review(self):
+        response = self.client.post(
+            "/api/reviews/",
+            data=json.dumps(
+                {
+                    "specialist": self.specialist.id,
+                    "author_name": "Анна",
+                    "rating": 5,
+                    "text": "Отлично",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Review.objects.count(), 1)
+        self.assertEqual(Review.objects.first().specialist_id, self.specialist.id)
+
+    def test_owner_can_create_tip(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            "/api/tips/",
+            data=json.dumps({"booking_id": self.booking.id, "amount": "150.50"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Tip.objects.count(), 1)
+        self.assertEqual(Tip.objects.first().amount, Decimal("150.50"))
+
+    def test_other_user_cannot_create_tip(self):
+        self.client.force_login(self.other)
+        response = self.client.post(
+            "/api/tips/",
+            data=json.dumps({"booking_id": self.booking.id, "amount": "100"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Tip.objects.count(), 0)

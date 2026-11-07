@@ -15,6 +15,7 @@ from .models import (
     SiteSettings,
     Specialist,
     SpecialistSalon,
+    Tip,
     WorkShift,
 )
 
@@ -174,4 +175,11 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ("specialist", "author_name", "rating", "created_at")
     list_filter = ("specialist", "rating")
     search_fields = ("specialist__full_name", "author_name")
+    date_hierarchy = "created_at"
+
+
+@admin.register(Tip)
+class TipAdmin(admin.ModelAdmin):
+    list_display = ("booking", "amount", "created_at")
+    search_fields = ("booking__phone", "booking__customer_name")
     date_hierarchy = "created_at"

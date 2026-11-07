@@ -134,6 +134,8 @@ $(document).ready(function() {
 
 	$('.rewiewPopupOpen').click(function(e) {
 		e.preventDefault();
+		$('#reviewModal .reviewPopup__specialist').val($(this).data('specialist-id') || '');
+		$('#reviewModal .reviewPopup__error').hide().text('');
 		$('#reviewModal').arcticmodal();
 	});
 
@@ -144,6 +146,8 @@ $(document).ready(function() {
 
 	$('.tipsPopupOpen').click(function(e) {
 		e.preventDefault();
+		$('#tipsModal .tipsPopup__booking').val($(this).data('booking-id') || '');
+		$('#tipsModal .tipsPopup__error').hide().text('');
 		$('#tipsModal').arcticmodal();
 	});
 
@@ -172,6 +176,72 @@ $(document).ready(function() {
 			.fail(function(xhr) {
 				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отправить заявку';
 				$error.text(msg).show();
+				$btn.prop('disabled', false);
+			});
+	});
+
+	$('.reviewPopup__form').on('submit', function(e) {
+		e.preventDefault();
+		var $form = $(this);
+		var $error = $form.find('.reviewPopup__error');
+		var $btn = $form.find('button[type="submit"]');
+		$error.hide().text('');
+		if (!$form.find('.reviewPopup__agree').prop('checked')) {
+			$error.text('Необходимо согласие с политикой конфиденциальности').show();
+			return;
+		}
+		if (!$form.find('.reviewPopup__specialist').val()) {
+			$error.text('Не удалось определить мастера для отзыва').show();
+			return;
+		}
+		$btn.prop('disabled', true);
+		$.post($form.data('url'), $form.serialize())
+			.done(function() {
+				$form.html('<div class="popup__text">Спасибо! Отзыв отправлен.</div>');
+			})
+			.fail(function(xhr) {
+				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отправить отзыв';
+				$error.text(msg).show();
+				$btn.prop('disabled', false);
+			});
+	});
+
+	$('.tipsPopup__form').on('submit', function(e) {
+		e.preventDefault();
+		var $form = $(this);
+		var $error = $form.find('.tipsPopup__error');
+		var $btn = $form.find('button[type="submit"]');
+		$error.hide().text('');
+		if (!$form.find('.tipsPopup__booking').val()) {
+			$error.text('Не удалось определить запись').show();
+			return;
+		}
+		$btn.prop('disabled', true);
+		$.post($form.data('url'), $form.serialize())
+			.done(function() {
+				$form.html('<div class="popup__text">Спасибо! Чаевые отправлены.</div>');
+			})
+			.fail(function(xhr) {
+				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отправить чаевые';
+				$error.text(msg).show();
+				$btn.prop('disabled', false);
+			});
+	});
+
+	$('.notes__cancelBtn').on('click', function(e) {
+		e.preventDefault();
+		var $btn = $(this);
+		if (!confirm('Отменить запись?')) return;
+		var url = $btn.data('url');
+		var csrf = $('input[name="csrfmiddlewaretoken"]').first().val();
+		$btn.prop('disabled', true);
+		$.post(url, {csrfmiddlewaretoken: csrf})
+			.done(function() {
+				window.location.reload();
+			})
+			.fail(function(xhr) {
+				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отменить запись';
+				alert(msg);
 				$btn.prop('disabled', false);
 			});
 	});

@@ -3,18 +3,28 @@
 <div class="reviewPopup popup box-modal" id="reviewModal">
 	<div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
 		<div class="popup__title reviewPopup__title">Отзыв</div>
-		<form action="#" class="reviewPopup__form">
-			<input type="text" name="fname" class="paymentPopup__form_input popup__input" placeholder="Введите имя" required>
-			<div class="contacts__form_inputBlock">
-				<input type="text" name="tel" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required="">
+		<form action="#" class="reviewPopup__form" data-url="{% url 'api_create_review' %}">
+			{% csrf_token %}
+			<input type="hidden" name="specialist" class="reviewPopup__specialist" value="">
+			<input type="text" name="author_name" class="paymentPopup__form_input popup__input" placeholder="Введите имя" required>
+			<div class="reviewPopup__rating" style="margin-bottom:12px;">
+				<label style="font-size:14px;">Оценка:&nbsp;
+					<select name="rating" class="popup__input" style="width:auto;display:inline-block;padding:8px 12px;">
+						<option value="5">5</option>
+						<option value="4">4</option>
+						<option value="3">3</option>
+						<option value="2">2</option>
+						<option value="1">1</option>
+					</select>
+				</label>
 			</div>
-			<input type="text" name="dateVis" class="paymentPopup__form_input popup__input" placeholder="Дата посещения" required>
-			<textarea name="popupTextarea" class="reviewPopup__form_textarea" placeholder="Текст отзыва"></textarea>
+			<textarea name="text" class="reviewPopup__form_textarea" placeholder="Текст отзыва"></textarea>
 			<div class="contacts__form_checkboxBlock fic">
-				<input type="checkbox" class="contacts__form_checkbox" checked>
+				<input type="checkbox" class="contacts__form_checkbox reviewPopup__agree" checked>
 				<span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
 			</div>
-			<button class="tipsPopup__btn popup__btn">Оплатить</button>
+			<div class="reviewPopup__error authPopup__error" style="display:none;"></div>
+			<button type="submit" class="tipsPopup__btn popup__btn">Отправить</button>
 		</form>
 	</div>
 </div>

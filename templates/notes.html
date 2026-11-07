@@ -142,8 +142,9 @@
                 </div>
                 <hr class="notes__block_hr">
                 <div class="notes__footer fic">
-                  <a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-                  <a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
+                  <a href="#" class="notes__footer_link rewiewPopupOpen" data-specialist-id="{{ booking.specialist_id }}">Оставить отзыв</a>
+                  <a href="#" class="notes__footer_link tipsPopupOpen" data-booking-id="{{ booking.id }}">Чаевые</a>
+                  <button type="button" class="notes__footer_link notes__cancelBtn" data-booking-id="{{ booking.id }}" data-url="{% url 'api_cancel_booking' booking.id %}" style="background:none;border:0;padding:0;cursor:pointer;">Отменить</button>
                   {% if booking.status != 'confirmed' %}
                     <form action="{% url 'api_payment' booking.id %}" method="post" style="display:inline;">
                       {% csrf_token %}
@@ -207,8 +208,8 @@
                 </div>
                 <hr class="notes__block_hr">
                 <div class="notes__footer fic">
-                  <a href="#" class="notes__footer_link rewiewPopupOpen">Оставить отзыв</a>
-                  <a href="#" class="notes__footer_link tipsPopupOpen">Чаевые</a>
+                  <a href="#" class="notes__footer_link rewiewPopupOpen" data-specialist-id="{{ booking.specialist_id }}">Оставить отзыв</a>
+                  <a href="#" class="notes__footer_link tipsPopupOpen" data-booking-id="{{ booking.id }}">Чаевые</a>
                   {% if booking.status == 'confirmed' %}
                     <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
                   {% endif %}

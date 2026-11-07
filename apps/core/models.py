@@ -386,3 +386,24 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.specialist} — {self.rating}/5 ({self.author_name})"
+
+
+class Tip(models.Model):
+    """Чаевые мастеру по записи."""
+
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="tips",
+        verbose_name="Запись",
+    )
+    amount = models.DecimalField("Сумма", max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField("Создан", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Чаевые"
+        verbose_name_plural = "Чаевые"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Tip {self.amount} for booking #{self.booking_id}"
