@@ -393,13 +393,19 @@ def notes(request):
 
     current_time = now()
     upcoming_bookings = (
-        bookings.filter(start_at__gte=current_time).exclude(status="canceled").order_by("start_at")
+        bookings.filter(start_at__gte=current_time)
+        .exclude(status=Booking.Status.CANCELED)
+        .order_by("start_at")
     )
     past_bookings = (
-        bookings.filter(start_at__lt=current_time).exclude(status="canceled").order_by("-start_at")
+        bookings.filter(start_at__lt=current_time)
+        .exclude(status=Booking.Status.CANCELED)
+        .order_by("-start_at")
     )
 
-    unpaid_sum = sum(b.price_final for b in upcoming_bookings if b.status != "confirmed")
+    unpaid_sum = sum(
+        b.price_final for b in upcoming_bookings if b.status != Booking.Status.CONFIRMED
+    )
     is_guest = not request.user.is_authenticated
     guest_phone = ""
     if is_guest:

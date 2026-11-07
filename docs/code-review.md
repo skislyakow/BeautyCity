@@ -188,8 +188,10 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   для Salon/Procedure/Specialist) и `forms.py:59-73` (копия `phone_validator`).
 - [ ] **16. Убрать дублирование шаблонов:** карточки в `notes.html:90-209`,
   сайдбар в `admin.html:12-60`.
-- [ ] **17. Использовать `Booking.Status.CONFIRMED`** вместо строк
-  `"confirmed"` (`payment_views.py`, `views.py`).
+- [x] **17. Использовать `Booking.Status.CONFIRMED`/`CANCELED`** вместо строк
+  статусов в Python-коде (`payment_views.py`, `views.py`).
+  **Сделано:** оставшиеся строковые сравнения/фильтры в `views.py` заменены на
+  константы `Booking.Status.*`; в `payment_views.py` уже использовались константы.
 - [ ] **18. Удалить мёртвый код или реализовать:** `BookingForm`,
   `ConsentAcceptance`/`ConsentDocument` (согласие не сохраняется),
   `SiteSettings`, `Booking.discount_percent`.
