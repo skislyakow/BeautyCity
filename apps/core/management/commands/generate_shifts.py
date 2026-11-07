@@ -1,9 +1,7 @@
-from datetime import time, timedelta
-
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
-from apps.core.models import Specialist, SpecialistSalon, WorkShift
+from apps.core.management.commands.seed_db import seed_shifts
+from apps.core.models import Specialist
 
 
 class Command(BaseCommand):
@@ -18,35 +16,8 @@ class Command(BaseCommand):
             )
             return
 
-        today = timezone.localdate()
-        work_days = [today + timedelta(days=i) for i in range(30)]
-        start = time(10, 0)
-        end = time(20, 0)
-
-        created_count = 0
         self.stdout.write("Начинаю генерацию расписания...")
-
-        for day in work_days:
-            for i, specialist in enumerate(specialists):
-                if day.weekday() == (i % 7):
-                    continue
-                salon_link = SpecialistSalon.objects.filter(specialist=specialist).first()
-                if not salon_link:
-                    continue
-
-                shift, created = WorkShift.objects.get_or_create(
-                    salon=salon_link.salon,
-                    specialist=specialist,
-                    date=day,
-                    defaults={
-                        "start_time": start,
-                        "end_time": end,
-                    },
-                )
-
-                if created:
-                    created_count += 1
-
+        created_count = seed_shifts(specialists)
         self.stdout.write(
             self.style.SUCCESS(f"Готово! Успешно создано новых смен: {created_count}")
         )

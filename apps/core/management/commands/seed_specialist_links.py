@@ -24,7 +24,7 @@ class Command(BaseCommand):
         specialists = Specialist.objects.all()
 
         if not salons or not procedures:
-            self.stdout.write(self.style.WARNING("Сначала нужны салоны и услуги (seed_demo_data)"))
+            self.stdout.write(self.style.WARNING("Сначала запусти салоны и услуги (seed_db)"))
             return
 
         for specialist in specialists:

@@ -181,9 +181,11 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
 - [x] **13. Убрать дублирование настроек:** `YOOKASSA_*` и `SITE_URL`
   объявлены дважды в `beauty_city/settings.py`.
   **Сделано:** оставлено одно определение с дефолтными значениями.
-- [ ] **14. Убрать дублирование сидов:** `generate_shifts.py:29-48` и
-  `seed_db.py:430-448`; исправить `seed_procedure_offerings.py`, который
-  ссылается на несуществующую `seed_demo_data`.
+- [x] **14. Убрать дублирование сидов:** дубли логики смен/связок в командах
+  сидирования; `seed_procedure_offerings.py` ссылался на несуществующую
+  `seed_demo_data`.
+  **Сделано:** `generate_shifts` и `seed_procedure_offerings` используют общие
+  хелперы из `seed_db`; исправлены ссылки на `seed_db` в командах сидирования.
 - [ ] **15. Убрать дублирование `admin.py:45-70`** (`preview`/`preview_large`
   для Salon/Procedure/Specialist) и `forms.py:59-73` (копия `phone_validator`).
 - [ ] **16. Убрать дублирование шаблонов:** карточки в `notes.html:90-209`,

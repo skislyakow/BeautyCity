@@ -429,25 +429,28 @@ def seed_specialists(salons, procedures):
     return Specialist.objects.all()
 
 
-def seed_shifts(specialists, salons):
+def seed_shifts(specialists, *, days=30):
     today = timezone.localdate()
-    work_days = [today + timedelta(days=i) for i in range(30)]
+    work_days = [today + timedelta(days=i) for i in range(days)]
     start = time(10, 0)
     end = time(20, 0)
+    created_count = 0
     for day in work_days:
         for i, specialist in enumerate(specialists):
             if day.weekday() == (i % 7):
                 continue
-            salon = SpecialistSalon.objects.filter(specialist=specialist).first()
-            if not salon:
+            salon_link = SpecialistSalon.objects.filter(specialist=specialist).first()
+            if not salon_link:
                 continue
-            WorkShift.objects.get_or_create(
-                salon=salon.salon,
+            _, created = WorkShift.objects.get_or_create(
+                salon=salon_link.salon,
                 specialist=specialist,
                 date=day,
-                start_time=start,
-                end_time=end,
+                defaults={"start_time": start, "end_time": end},
             )
+            if created:
+                created_count += 1
+    return created_count
 
 
 def seed_promocodes():
@@ -568,7 +571,7 @@ class Command(BaseCommand):
             self.stdout.write(f"  {len(specialists)} мастеров")
 
             self.stdout.write("Создание расписания на 30 дней...")
-            seed_shifts(specialists, salons)
+            seed_shifts(specialists)
 
             self.stdout.write("Создание промокодов...")
             seed_promocodes()
