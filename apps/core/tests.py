@@ -720,3 +720,44 @@ class ReviewTipCancelTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(Tip.objects.count(), 0)
+
+
+class AdminPanelStatsTests(TestCase):
+    def setUp(self):
+        self.salon = Salon.objects.create(name="Салон", address="Адрес")
+        self.procedure = Procedure.objects.create(
+            title="Стрижка",
+            duration_minutes=60,
+            base_price=Decimal("1000.00"),
+        )
+        self.staff = User.objects.create_user(username="staff", password="pass", is_staff=True)
+        self.current = timezone.now().replace(day=15, hour=12, minute=0, second=0, microsecond=0)
+
+    def _booking(self, *, start_at, status):
+        return Booking.objects.create(
+            salon=self.salon,
+            procedure=self.procedure,
+            customer_name="Клиент",
+            phone="+79990000999",
+            start_at=start_at,
+            end_at=start_at + timedelta(hours=1),
+            status=status,
+            price_original=Decimal("1000.00"),
+            price_final=Decimal("1000.00"),
+        )
+
+    @patch("apps.core.views.now")
+    def test_admin_panel_counts_past_confirmed_visits(self, mock_now):
+        mock_now.return_value = self.current
+        self._booking(start_at=self.current - timedelta(days=1), status=Booking.Status.CONFIRMED)
+        self._booking(start_at=self.current - timedelta(days=2), status=Booking.Status.NEW)
+        self._booking(start_at=self.current + timedelta(days=1), status=Booking.Status.CONFIRMED)
+        self._booking(start_at=self.current - timedelta(days=3), status=Booking.Status.CANCELED)
+
+        self.client.force_login(self.staff)
+        response = self.client.get("/dashboard/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["visits_month"], 1)
+        self.assertEqual(response.context["visit_percentage"], 50)
+        self.assertEqual(response.context["visits_year"], 1)

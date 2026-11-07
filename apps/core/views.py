@@ -339,13 +339,13 @@ def initiate_payment(request, booking_id):
 @api_view(["GET"])
 def admin_stats(request):
     total_bookings = Booking.objects.count()
-    now = timezone.now()
-    month_start = now.replace(day=1, hour=0, minute=0, second=0)
+    current_time = timezone.now()
+    month_start = current_time.replace(day=1, hour=0, minute=0, second=0)
     bookings_this_month = Booking.objects.filter(created_at__gte=month_start).count()
     total_revenue = (
-        Booking.objects.filter(created_at__gte=month_start, status="confirmed").aggregate(
-            total=Sum("price_final")
-        )["total"]
+        Booking.objects.filter(
+            created_at__gte=month_start, status=Booking.Status.CONFIRMED
+        ).aggregate(total=Sum("price_final"))["total"]
         or 0
     )
 
@@ -418,23 +418,29 @@ def admin_panel(request):
 
     bookings_this_month = Booking.objects.filter(
         start_at__year=current_date.year, start_at__month=current_date.month
-    ).exclude(status="canceled")
-    payments_month_dict = bookings_this_month.filter(status="confirmed").aggregate(
+    ).exclude(status=Booking.Status.CANCELED)
+    payments_month_dict = bookings_this_month.filter(status=Booking.Status.CONFIRMED).aggregate(
         Sum("price_final")
     )
     payments_month = payments_month_dict["price_final__sum"] or 0
 
-    visits_month = bookings_this_month.count()
+    past_month = bookings_this_month.filter(start_at__lt=current_date)
+    confirmed_past_month = past_month.filter(status=Booking.Status.CONFIRMED)
+    visits_month = confirmed_past_month.count()
+    total_past_month = past_month.count()
+    visit_percentage = round(visits_month / total_past_month * 100) if total_past_month else 0
 
-    visits_year = (
-        Booking.objects.filter(start_at__year=current_date.year).exclude(status="canceled").count()
-    )
+    visits_year = Booking.objects.filter(
+        start_at__year=current_date.year,
+        start_at__lt=current_date,
+        status=Booking.Status.CONFIRMED,
+    ).count()
 
     context = {
         "payments_month": payments_month,
         "visits_month": visits_month,
         "visits_year": visits_year,
-        "visit_percentage": 100,  # Заглушка, пока не решим, как это считать
+        "visit_percentage": visit_percentage,
         "callback_requests": CallbackRequest.objects.filter(is_processed=False).order_by(
             "-created_at"
         ),
