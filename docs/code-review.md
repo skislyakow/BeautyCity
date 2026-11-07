@@ -195,8 +195,10 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
 - [ ] **18. Удалить мёртвый код или реализовать:** `BookingForm`,
   `ConsentAcceptance`/`ConsentDocument` (согласие не сохраняется),
   `SiteSettings`, `Booking.discount_percent`.
-- [ ] **19. Почистить `seed_db.py:380`:** `data.pop("image")` мутирует
-  модульную константу, `seed_salons()` нельзя вызвать дважды.
+- [x] **19. Почистить `seed_db.py`:** `data.pop("image")`/`avatar` мутировал
+  модульные константы, сиды нельзя было вызвать дважды.
+  **Сделано:** сиды читают `image`/`avatar` без мутации и исключают их из
+  `defaults` при `get_or_create`.
 - [x] **20. Убрать Middle Man:** `views.py:176` `initiate_payment` повторно
   достаёт booking и делегирует в `create_payment`, который достаёт его снова.
   **Сделано в P0-4:** `initiate_payment` сразу делегирует в `create_payment`.

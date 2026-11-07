@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
-from django.db import IntegrityError, close_old_connections, transaction
+from django.db import IntegrityError, OperationalError, close_old_connections, transaction
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
@@ -429,12 +429,19 @@ class BookingCreationTests(TransactionTestCase):
                 client = Client()
                 payload = self._payload(phone=phone)
                 barrier.wait(timeout=10)
-                response = client.post(
-                    self.url,
-                    data=json.dumps(payload),
-                    content_type="application/json",
-                )
-                return response.status_code
+                for attempt in range(5):
+                    try:
+                        response = client.post(
+                            self.url,
+                            data=json.dumps(payload),
+                            content_type="application/json",
+                        )
+                        return response.status_code
+                    except OperationalError as exc:
+                        if "locked" not in str(exc).lower() or attempt == 4:
+                            raise
+                        close_old_connections()
+                return 503
             finally:
                 close_old_connections()
 

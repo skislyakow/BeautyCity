@@ -376,8 +376,9 @@ def _generate_consent_pdf():
 def seed_salons():
     objs = []
     for data in SALONS:
-        image_rel = data.pop("image")
-        obj, _ = Salon.objects.get_or_create(name=data["name"], defaults=data)
+        image_rel = data["image"]
+        defaults = {k: v for k, v in data.items() if k != "image"}
+        obj, _ = Salon.objects.get_or_create(name=data["name"], defaults=defaults)
         _assign_image(obj, "image", image_rel)
         objs.append(obj)
     return objs
@@ -386,8 +387,9 @@ def seed_salons():
 def seed_procedures():
     objs = {}
     for data in PROCEDURES:
-        image_rel = data.pop("image")
-        obj, _ = Procedure.objects.get_or_create(title=data["title"], defaults=data)
+        image_rel = data["image"]
+        defaults = {k: v for k, v in data.items() if k != "image"}
+        obj, _ = Procedure.objects.get_or_create(title=data["title"], defaults=defaults)
         _assign_image(obj, "image", image_rel)
         objs[obj.title] = obj
     return objs
@@ -406,7 +408,7 @@ def seed_offerings(salons, procedures):
 
 def seed_specialists(salons, procedures):
     for sp_data in SPECIALISTS:
-        avatar_rel = sp_data.pop("avatar")
+        avatar_rel = sp_data["avatar"]
         specialist, _ = Specialist.objects.get_or_create(
             full_name=sp_data["full_name"],
             defaults={
