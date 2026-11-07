@@ -1,12 +1,19 @@
+import logging
+from datetime import datetime, timedelta
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import CustomerProfile, normalize_phone
 
 TESTING_CODE = "1234"
+SMS_CODE_TTL = timedelta(minutes=5)
+SMS_MAX_ATTEMPTS = 5
+logger = logging.getLogger(__name__)
 
 
 def get_user_phone(user):
@@ -30,8 +37,13 @@ def phone_login_view(request):
     if not phone:
         return JsonResponse({"status": "error", "message": "Введите номер телефона"}, status=400)
 
+    code = TESTING_CODE
     request.session["auth_phone"] = phone
-    request.session["auth_code"] = TESTING_CODE
+    request.session["auth_code"] = code
+    request.session["auth_code_created_at"] = timezone.now().isoformat()
+    request.session["auth_attempts"] = 0
+    logger.info("SMS-код для %s: %s (dev-заглушка)", phone, code)
+    print(f"[SMS] Код для {phone}: {code}")
     return JsonResponse({"status": "ok", "phone": phone})
 
 
@@ -46,16 +58,42 @@ def phone_confirm_view(request):
 
     auth_code = request.session.get("auth_code")
     auth_phone = request.session.get("auth_phone")
+    created_at = request.session.get("auth_code_created_at")
+    attempts = request.session.get("auth_attempts", 0)
 
-    if not auth_phone:
+    if not auth_phone or not auth_code:
         return JsonResponse({"status": "error", "message": "Начните с ввода телефона"}, status=400)
 
+    if created_at:
+        try:
+            created = datetime.fromisoformat(created_at)
+            if timezone.is_naive(created):
+                created = timezone.make_aware(created)
+            if timezone.now() - created > SMS_CODE_TTL:
+                request.session.pop("auth_code", None)
+                request.session.pop("auth_code_created_at", None)
+                return JsonResponse(
+                    {"status": "error", "message": "Код истёк, запросите новый"}, status=400
+                )
+        except ValueError:
+            pass
+
+    if attempts >= SMS_MAX_ATTEMPTS:
+        request.session.pop("auth_code", None)
+        request.session.pop("auth_code_created_at", None)
+        return JsonResponse(
+            {"status": "error", "message": "Слишком много попыток, запросите новый код"}, status=400
+        )
+
     if code != auth_code:
+        request.session["auth_attempts"] = attempts + 1
         return JsonResponse({"status": "error", "message": "Неверный код"}, status=400)
 
     login_by_phone(request, auth_phone)
     request.session.pop("auth_phone", None)
     request.session.pop("auth_code", None)
+    request.session.pop("auth_code_created_at", None)
+    request.session.pop("auth_attempts", None)
     request.session.pop("guest_booking_ids", None)
     return JsonResponse({"status": "ok", "phone": auth_phone})
 
