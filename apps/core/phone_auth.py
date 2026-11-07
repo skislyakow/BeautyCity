@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from .models import CustomerProfile
+from .models import CustomerProfile, normalize_phone
 
 TESTING_CODE = "1234"
 
@@ -12,7 +12,8 @@ TESTING_CODE = "1234"
 def get_user_phone(user):
     """Телефон пользователя: профиль, затем username для старых phone-аккаунтов."""
     profile = getattr(user, "profile", None)
-    return ((profile.phone if profile else "") or user.username or "").strip()
+    phone = ((profile.phone if profile else "") or user.username or "").strip()
+    return normalize_phone(phone) or phone
 
 
 def get_guest_booking_ids(request):
@@ -25,7 +26,7 @@ def get_guest_booking_ids(request):
 
 @require_POST
 def phone_login_view(request):
-    phone = request.POST.get("tel", "").strip()
+    phone = normalize_phone(request.POST.get("tel", "").strip())
     if not phone:
         return JsonResponse({"status": "error", "message": "Введите номер телефона"}, status=400)
 
@@ -61,7 +62,7 @@ def phone_confirm_view(request):
 
 def login_by_phone(request, phone):
     """Вход по номеру телефона после успешной проверки SMS-кода."""
-    phone = (phone or "").strip()
+    phone = normalize_phone(phone)
 
     profile = CustomerProfile.objects.filter(phone=phone).select_related("user").first()
     if profile:

@@ -1,9 +1,7 @@
-import re
-
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Booking
+from .models import Booking, normalize_phone
 
 
 class BookingForm(forms.ModelForm):
@@ -58,16 +56,7 @@ class BookingForm(forms.ModelForm):
 
     def clean_phone(self):
         """Очистка и приведение телефона к формату +79998887766"""
-        phone = self.cleaned_data.get("phone", "").strip()
-
-        phone = "".join(c for c in phone if c.isdigit() or c == "+")
-
-        if phone.startswith("8") or phone.startswith("7"):
-            phone = "+7" + phone[1:]
-        elif not phone.startswith("+7"):
-            phone = "+7" + phone.lstrip("+7")
-
-        if not re.fullmatch(r"^\+7\d{10}$", phone):
+        phone = normalize_phone(self.cleaned_data.get("phone", ""))
+        if not phone or not phone.startswith("+7") or len(phone) != 12:
             raise ValidationError("Телефон должен быть в формате: +79998887766")
-
         return phone

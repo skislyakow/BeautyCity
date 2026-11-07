@@ -8,6 +8,7 @@ from .models import (
     PromoCode,
     Salon,
     Specialist,
+    normalize_phone,
 )
 from .slots import get_available_slots
 
@@ -110,6 +111,10 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         specialist = data.get("specialist")
         salon = data.get("salon")
         start_at = data.get("start_at")
+        if data.get("phone"):
+            normalized = normalize_phone(data["phone"])
+            if normalized:
+                data["phone"] = normalized
         promo_code_input = data.pop("promo_code", None) or self.initial_data.get("promo_code")
 
         if promo_code_input:

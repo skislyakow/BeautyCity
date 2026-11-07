@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.validators import (
     FileExtensionValidator,
@@ -12,6 +14,23 @@ phone_validator = RegexValidator(
     regex=r"^\+?\d{10,15}$",
     message="Телефон должен быть в формате +79998887766 (10–15 цифр).",
 )
+
+
+def normalize_phone(phone):
+    """Нормализует телефон к формату +79998887766 (для РФ номеров)."""
+    phone = str(phone or "").strip()
+    if not phone:
+        return ""
+    digits = re.sub(r"\D", "", phone)
+    if not digits:
+        return ""
+    if digits.startswith("8") and len(digits) == 11:
+        digits = "7" + digits[1:]
+    if len(digits) == 10:
+        digits = "7" + digits
+    if digits.startswith("7") and len(digits) == 11:
+        return "+" + digits
+    return "+" + digits
 
 
 class Salon(models.Model):
