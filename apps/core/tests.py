@@ -761,3 +761,21 @@ class AdminPanelStatsTests(TestCase):
         self.assertEqual(response.context["visits_month"], 1)
         self.assertEqual(response.context["visit_percentage"], 50)
         self.assertEqual(response.context["visits_year"], 1)
+
+
+class LandingReviewsTests(TestCase):
+    def test_index_renders_reviews_from_database(self):
+        specialist = Specialist.objects.create(full_name="Мастер")
+        Review.objects.create(
+            specialist=specialist,
+            author_name="Тестовый клиент",
+            rating=5,
+            text="Отзыв из базы данных",
+        )
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Тестовый клиент")
+        self.assertContains(response, "Отзыв из базы данных")
+        self.assertNotContains(response, "12 ноября 2022")

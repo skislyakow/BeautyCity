@@ -360,7 +360,10 @@ def admin_stats(request):
 
 def index(request):
     """Главная страница"""
-    return render(request, "index.html")
+    reviews = (
+        Review.objects.exclude(text="").select_related("specialist").order_by("-created_at")[:12]
+    )
+    return render(request, "index.html", {"reviews": reviews})
 
 
 def service(request):
