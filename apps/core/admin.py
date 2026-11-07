@@ -36,39 +36,31 @@ def image_preview(obj, field_name: str, size: int = 60):
     )
 
 
+class ImagePreviewAdminMixin:
+    preview_field = "image"
+
+    @admin.display(description="Фото")
+    def preview(self, obj):
+        return image_preview(obj, self.preview_field, size=44)
+
+    @admin.display(description="Превью")
+    def preview_large(self, obj):
+        return image_preview(obj, self.preview_field, size=180)
+
+
 @admin.register(Salon)
-class SalonAdmin(admin.ModelAdmin):
+class SalonAdmin(ImagePreviewAdminMixin, admin.ModelAdmin):
     list_display = ("preview", "name", "address", "phone", "is_active")
     list_filter = ("is_active",)
     search_fields = ("name", "address")
     readonly_fields = ("preview_large",)
 
-    def preview(self, obj):
-        return image_preview(obj, "image", size=44)
-
-    preview.short_description = "Фото"
-
-    def preview_large(self, obj):
-        return image_preview(obj, "image", size=180)
-
-    preview_large.short_description = "Превью"
-
 
 @admin.register(Procedure)
-class ProcedureAdmin(admin.ModelAdmin):
+class ProcedureAdmin(ImagePreviewAdminMixin, admin.ModelAdmin):
     list_display = ("preview", "title", "duration_minutes", "base_price")
     search_fields = ("title",)
     readonly_fields = ("preview_large",)
-
-    def preview(self, obj):
-        return image_preview(obj, "image", size=44)
-
-    preview.short_description = "Фото"
-
-    def preview_large(self, obj):
-        return image_preview(obj, "image", size=180)
-
-    preview_large.short_description = "Превью"
 
 
 @admin.register(ProcedureOffering)
@@ -79,21 +71,12 @@ class ProcedureOfferingAdmin(admin.ModelAdmin):
 
 
 @admin.register(Specialist)
-class SpecialistAdmin(admin.ModelAdmin):
+class SpecialistAdmin(ImagePreviewAdminMixin, admin.ModelAdmin):
+    preview_field = "photo"
     list_display = ("preview", "full_name", "is_active")
     list_filter = ("is_active",)
     search_fields = ("full_name",)
     readonly_fields = ("preview_large",)
-
-    def preview(self, obj):
-        return image_preview(obj, "photo", size=44)
-
-    preview.short_description = "Фото"
-
-    def preview_large(self, obj):
-        return image_preview(obj, "photo", size=180)
-
-    preview_large.short_description = "Превью"
 
 
 @admin.register(SpecialistSalon)

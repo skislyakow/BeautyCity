@@ -186,8 +186,11 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   `seed_demo_data`.
   **Сделано:** `generate_shifts` и `seed_procedure_offerings` используют общие
   хелперы из `seed_db`; исправлены ссылки на `seed_db` в командах сидирования.
-- [ ] **15. Убрать дублирование `admin.py:45-70`** (`preview`/`preview_large`
-  для Salon/Procedure/Specialist) и `forms.py:59-73` (копия `phone_validator`).
+- [x] **15. Убрать дублирование `admin.py` и `forms.py`.**
+  Дублировались `preview`/`preview_large` для Salon/Procedure/Specialist и логика
+  нормализации телефона в форме.
+  **Сделано:** добавлен `ImagePreviewAdminMixin`; `forms.py` использует общий
+  `normalize_phone()` (P1-8).
 - [ ] **16. Убрать дублирование шаблонов:** карточки в `notes.html:90-209`,
   сайдбар в `admin.html:12-60`.
 - [x] **17. Использовать `Booking.Status.CONFIRMED`/`CANCELED`** вместо строк
