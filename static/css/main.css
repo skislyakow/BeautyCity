@@ -335,6 +335,13 @@ padding: 15px;
 }
 .masters__header_img {
 	margin-right: 10px;
+	width: 64px;
+	height: 64px;
+	object-fit: cover;
+	object-position: center;
+	border-radius: 50%;
+	flex-shrink: 0;
+	display: block;
 }
 .masters__header_name {
 	font-weight: 500;
