@@ -49,10 +49,21 @@ class ImagePreviewAdminMixin:
 
 @admin.register(Salon)
 class SalonAdmin(ImagePreviewAdminMixin, admin.ModelAdmin):
-    list_display = ("preview", "name", "address", "phone", "is_active")
+    list_display = ("preview", "name", "address", "phone", "working_hours", "is_active")
     list_filter = ("is_active",)
     search_fields = ("name", "address")
     readonly_fields = ("preview_large",)
+    fields = (
+        "preview_large",
+        "name",
+        "address",
+        "phone",
+        "working_hours",
+        "image",
+        "latitude",
+        "longitude",
+        "is_active",
+    )
 
 
 @admin.register(Procedure)

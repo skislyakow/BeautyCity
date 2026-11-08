@@ -44,6 +44,26 @@ class Salon(models.Model):
         validators=[FileExtensionValidator(["svg", "png", "jpg", "jpeg", "webp"])],
     )
     phone = models.CharField("Телефон салона", max_length=20, blank=True)
+    working_hours = models.CharField(
+        "Часы работы",
+        max_length=100,
+        blank=True,
+        default="с 10:00 до 20:00  без выходных",
+    )
+    latitude = models.DecimalField(
+        "Широта",
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
+    longitude = models.DecimalField(
+        "Долгота",
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
     is_active = models.BooleanField("Активен", default=True)
 
     class Meta:

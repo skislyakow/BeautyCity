@@ -28,18 +28,21 @@ SALONS = [
         "name": "BeautyCity Пушкинская",
         "address": "ул. Пушкинская, д. 78А",
         "phone": "+79179023800",
+        "working_hours": "с 10:00 до 20:00  без выходных",
         "image": "salons/salon1.svg",
     },
     {
         "name": "BeautyCity Ленина",
         "address": "ул. Ленина, д. 211",
         "phone": "+79179023800",
+        "working_hours": "с 10:00 до 20:00  без выходных",
         "image": "salons/salon2.svg",
     },
     {
         "name": "BeautyCity Красная",
         "address": "ул. Красная, д. 10",
         "phone": "+79179023800",
+        "working_hours": "с 10:00 до 20:00  без выходных",
         "image": "salons/salon3.svg",
     },
 ]

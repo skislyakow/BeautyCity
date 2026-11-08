@@ -149,28 +149,8 @@
 						</form>
 					</div>
 					<div class="col-md-12 col-lg-3">
-						<div class="contacts__locationBlock">
-							<div class="contacts__location fic">
-								<img src="{% static 'img/location.svg' %}" alt="location" class="contacts__location_icon">
-								<div class="contacts__location_info">
-									<div class="contacts__location_intro">ул. Пушкинская, д. 78А</div>
-								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
-								</div>
-							</div>
-							<div class="contacts__location fic">
-								<img src="{% static 'img/location.svg' %}" alt="location" class="contacts__location_icon">
-								<div class="contacts__location_info">
-									<div class="contacts__location_intro">ул. Красная, д. 10</div>
-								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
-								</div>
-							</div>
-							<div class="contacts__location fic">
-								<img src="{% static 'img/location.svg' %}" alt="location" class="contacts__location_icon">
-								<div class="contacts__location_info">
-									<div class="contacts__location_intro">ул. Ленина, д. 211</div>
-								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
-								</div>
-							</div>
+						<div class="contacts__locationBlock" id="contactsLocations">
+							<p class="js-loading">Загрузка салонов...</p>
 						</div>
 						<div class="contacts__block">
 							<div class="contacts__social">
@@ -192,9 +172,7 @@
 						</div>
 					</div>
 					<div class="col-md-12 col-lg-5 col-xl-6">
-						<div class="contacts__map">
-							<script type="text/javascript" charset="utf-8" async src="https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Ab7c7d417e660dbf6565501ccc84acd33ec7588fd751ceabc6947e3e9b881e413&amp;lang=ru_RU&amp;scroll=true"></script>
-						</div>
+						<div class="contacts__map" id="contactsMap"></div>
 					</div>
 				</div>
 			</div>
@@ -203,6 +181,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 <script>
 $(function () {
 	function prepareSlider($slider) {
@@ -353,6 +332,77 @@ $(function () {
 		prepareSlider($container);
 		$container.html('<p>Не удалось загрузить мастеров.</p>');
 		initMasters($container);
+	});
+
+	// --- Контакты: салоны из БД + метки на карте ---
+	function renderContactsLocations(salons) {
+		const $container = $('#contactsLocations');
+		$container.empty();
+		if (!salons.length) {
+			$container.html('<p>Салоны пока не добавлены.</p>');
+			return;
+		}
+		salons.forEach(function (salon) {
+			const name = salon.name || '';
+			const address = salon.address || '';
+			const hours = salon.working_hours || '';
+			const dateLine = [address, hours].filter(Boolean).join('<br>');
+			$container.append(`
+				<div class="contacts__location fic">
+					<img src="{% static 'img/location.svg' %}" alt="location" class="contacts__location_icon">
+					<div class="contacts__location_info">
+						<div class="contacts__location_intro">${name}</div>
+						<div class="contacts__location_date">${dateLine}</div>
+					</div>
+				</div>
+			`);
+		});
+	}
+
+	function initContactsMap(salons) {
+		const mapEl = document.getElementById('contactsMap');
+		if (!mapEl || typeof ymaps === 'undefined') return;
+		ymaps.ready(function () {
+			const points = (salons || []).filter(function (s) {
+				return s.latitude != null && s.longitude != null && s.latitude !== '' && s.longitude !== '';
+			}).map(function (s) {
+				return {
+					coords: [parseFloat(s.latitude), parseFloat(s.longitude)],
+					name: s.name || '',
+					address: s.address || '',
+					hours: s.working_hours || ''
+				};
+			});
+
+			const defaultCenter = [55.751244, 37.618423];
+			const center = points.length ? points[0].coords : defaultCenter;
+			const zoom = points.length ? 12 : 10;
+			const map = new ymaps.Map('contactsMap', {
+				center: center,
+				zoom: zoom,
+				controls: ['zoomControl']
+			}, {suppressMapOpenBlock: true});
+
+			points.forEach(function (p) {
+				map.geoObjects.add(new ymaps.Placemark(p.coords, {
+					balloonContentHeader: p.name,
+					balloonContentBody: [p.address, p.hours].filter(Boolean).join('<br>'),
+					hintContent: p.name
+				}, {preset: 'islands#redDotIcon'}));
+			});
+
+			if (points.length > 1) {
+				map.setBounds(map.geoObjects.getBounds(), {checkZoomRange: true, zoomMargin: 40});
+			}
+		});
+	}
+
+	$.get('/api/salons/', function (salons) {
+		renderContactsLocations(salons || []);
+		initContactsMap(salons || []);
+	}).fail(function () {
+		$('#contactsLocations').html('<p>Не удалось загрузить салоны.</p>');
+		initContactsMap([]);
 	});
 });
 </script>
