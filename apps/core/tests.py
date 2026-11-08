@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from apps.core.models import (
     Booking,
+    CallbackRequest,
     ConsentAcceptance,
     ConsentDocument,
     CustomerProfile,
@@ -744,6 +745,30 @@ class ReviewTipCancelTests(TestCase):
         self.assertEqual(Review.objects.count(), 1)
         self.assertEqual(Review.objects.first().specialist_id, self.specialist.id)
 
+    def test_create_review_records_consent(self):
+        document = ConsentDocument.objects.create(
+            title="Согласие", file="consents/test.pdf", is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            "/api/reviews/",
+            data=json.dumps(
+                {
+                    "specialist": self.specialist.id,
+                    "author_name": "Анна",
+                    "rating": 5,
+                    "text": "Отлично",
+                    "consent_accepted": True,
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        acceptance = ConsentAcceptance.objects.get()
+        self.assertEqual(acceptance.document, document)
+        self.assertEqual(acceptance.user, self.user)
+        self.assertEqual(acceptance.phone, "+79990000011")
+
     def test_owner_can_create_tip(self):
         self.client.force_login(self.user)
         response = self.client.post(
@@ -823,3 +848,36 @@ class LandingReviewsTests(TestCase):
         self.assertContains(response, "Тестовый клиент")
         self.assertContains(response, "Отзыв из базы данных")
         self.assertNotContains(response, "12 ноября 2022")
+
+
+class ConsentFlowTests(TestCase):
+    def setUp(self):
+        self.document = ConsentDocument.objects.create(
+            title="Согласие", file="consents/test.pdf", is_active=True
+        )
+
+    def test_callback_records_consent(self):
+        response = self.client.post(
+            "/callback/",
+            data={"name": "Анна", "phone": "+79990000077", "consent_accepted": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(CallbackRequest.objects.count(), 1)
+        acceptance = ConsentAcceptance.objects.get()
+        self.assertEqual(acceptance.document, self.document)
+        self.assertEqual(acceptance.phone, "+79990000077")
+
+    def test_phone_login_records_consent(self):
+        response = self.client.post(
+            "/phone-login/",
+            data={"tel": "8 (999) 000-00-88", "consent_accepted": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        acceptance = ConsentAcceptance.objects.get()
+        self.assertEqual(acceptance.document, self.document)
+        self.assertEqual(acceptance.phone, "+79990000088")
+
+    def test_phone_login_without_consent_does_not_record(self):
+        response = self.client.post("/phone-login/", data={"tel": "+79990000089"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ConsentAcceptance.objects.count(), 0)

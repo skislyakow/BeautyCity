@@ -36,10 +36,15 @@ $(function () {
 		const $form = $(this);
 		const $error = $form.find('.authPopup__error');
 		const phone = $form.find('input[name="tel"]').val();
+		const consentAccepted = $form.find('input[name="consent_accepted"]').is(':checked');
 
 		$error.hide().text('');
+		if (!consentAccepted) {
+			$error.text('Необходимо согласие с политикой конфиденциальности').show();
+			return;
+		}
 
-		$.post(window.AUTH_URLS.requestCode, {tel: phone})
+		$.post(window.AUTH_URLS.requestCode, {tel: phone, consent_accepted: '1'})
 			.done(function (data) {
 				pendingPhone = data.phone;
 				$('#confirmPhone').text(formatPhone(pendingPhone));

@@ -18,8 +18,6 @@ from rest_framework.response import Response
 from .models import (
     Booking,
     CallbackRequest,
-    ConsentAcceptance,
-    ConsentDocument,
     Procedure,
     ProcedureOffering,
     PromoCode,
@@ -27,6 +25,7 @@ from .models import (
     Salon,
     Specialist,
     Tip,
+    record_consent_acceptance,
 )
 from .payment_views import create_payment
 from .phone_auth import get_guest_booking_ids, get_user_phone
@@ -138,15 +137,10 @@ def available_slots(request):
 
 
 def _record_booking_consent(request, booking, consent_accepted):
-    if not consent_accepted:
-        return
-    document = ConsentDocument.objects.filter(is_active=True).order_by("-uploaded_at").first()
-    if not document:
-        return
-    ConsentAcceptance.objects.create(
-        user=request.user if request.user.is_authenticated else None,
+    record_consent_acceptance(
+        user=request.user,
         phone=booking.phone,
-        document=document,
+        accepted=consent_accepted,
     )
 
 
@@ -284,6 +278,12 @@ def create_review(request):
         author_name=author_name,
         rating=rating,
         text=text,
+    )
+    consent_raw = request.data.get("consent_accepted", request.data.get("consent"))
+    record_consent_acceptance(
+        user=request.user,
+        phone=get_user_phone(request.user) if request.user.is_authenticated else "",
+        accepted=consent_raw in (True, "1", "true", "True", "on"),
     )
     return Response({"id": review.id, "status": "created"}, status=201)
 
@@ -492,6 +492,12 @@ def callback_request(request):
         )
 
     request_obj.save()
+    consent_raw = request.POST.get("consent_accepted", request.POST.get("consent"))
+    record_consent_acceptance(
+        user=request.user,
+        phone=phone,
+        accepted=consent_raw in (True, "1", "true", "True", "on"),
+    )
     return JsonResponse({"status": "ok"})
 
 

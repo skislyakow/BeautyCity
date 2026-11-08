@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import CustomerProfile, normalize_phone
+from .models import CustomerProfile, normalize_phone, record_consent_acceptance
 
 TESTING_CODE = "1234"
 SMS_CODE_TTL = timedelta(minutes=5)
@@ -36,6 +36,13 @@ def phone_login_view(request):
     phone = normalize_phone(request.POST.get("tel", "").strip())
     if not phone:
         return JsonResponse({"status": "error", "message": "Введите номер телефона"}, status=400)
+
+    consent_raw = request.POST.get("consent_accepted", request.POST.get("consent"))
+    record_consent_acceptance(
+        user=request.user,
+        phone=phone,
+        accepted=consent_raw in (True, "1", "true", "True", "on"),
+    )
 
     code = TESTING_CODE
     request.session["auth_phone"] = phone

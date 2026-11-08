@@ -246,6 +246,19 @@ class ConsentAcceptance(models.Model):
         return f"Consent #{self.id} @ {self.accepted_at:%Y-%m-%d %H:%M}"
 
 
+def record_consent_acceptance(*, user=None, phone="", accepted=True):
+    """Фиксирует факт согласия для активного документа (если он есть)."""
+    if not accepted:
+        return None
+    document = ConsentDocument.objects.filter(is_active=True).order_by("-uploaded_at").first()
+    if not document:
+        return None
+    phone = normalize_phone(phone) or str(phone or "").strip()
+    if user is not None and not getattr(user, "is_authenticated", False):
+        user = None
+    return ConsentAcceptance.objects.create(user=user, phone=phone, document=document)
+
+
 class CustomerProfile(models.Model):
     """
     Удобно для подсчёта регистраций и хранения телефона.
