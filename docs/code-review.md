@@ -191,8 +191,14 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   нормализации телефона в форме.
   **Сделано:** добавлен `ImagePreviewAdminMixin`; `forms.py` использует общий
   `normalize_phone()` (P1-8).
-- [ ] **16. Убрать дублирование шаблонов:** карточки в `notes.html:90-209`,
-  сайдбар в `admin.html:12-60`.
+- [x] **16. Убрать дублирование шаблонов.**
+  Карточки записей в `notes.html` (предстоящие/прошедшие) дублировались.
+  **Сделано:** добавлен `templates/partials/_notes_booking_card.html` с
+  вариантом `upcoming`/`past`; `notes.html` использует общий partial при
+  сохранении классов, data-атрибутов, URL и JS-хуков (`rewiewPopupOpen`,
+  `tipsPopupOpen`, `notes__cancelBtn`). Сайдбары `notes.html`/`admin.html`
+  оставлены раздельно: отличаются по авторизации/гостевому режиму, имени и
+  пунктам меню — параметризация давала бы больше сложности, чем пользы.
 - [x] **17. Использовать `Booking.Status.CONFIRMED`/`CANCELED`** вместо строк
   статусов в Python-коде (`payment_views.py`, `views.py`).
   **Сделано:** оставшиеся строковые сравнения/фильтры в `views.py` заменены на

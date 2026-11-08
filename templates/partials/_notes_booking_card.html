@@ -1,0 +1,65 @@
+{% load static %}
+<div class="notes__main_block">
+  {% if booking.procedure.image %}
+    <img src="{{ booking.procedure.image.url }}" alt="{{ booking.procedure.title }}" class="notes__main_block__img">
+  {% elif variant == "upcoming" %}
+    <img src="{% static 'img/services/service3.svg' %}" alt="service" class="notes__main_block__img">
+  {% else %}
+    <img src="{% static 'img/services/service1.svg' %}" alt="service" class="notes__main_block__img">
+  {% endif %}
+
+  <div class="notes__main_block__elems">
+    <div class="notes__main_block__header fic">
+      <div class="notes__main_block__header__itesm fic">
+        <div class="notes__main_number">Запись №{{ booking.id }}</div>
+        <div class="notes__main_address">{{ booking.salon.address }}</div>
+      </div>
+      {% if booking.status == 'confirmed' %}
+        <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
+      {% else %}
+        <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
+      {% endif %}
+    </div>
+    <div class="notes__main_block__main ">
+      <div class="notes__main_block__main_items">
+        <div class="notes__main_block__main_elems fic">
+          <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Услуга:</div>
+          <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Цена:</div>
+        </div>
+        <div class="notes__main_block__main_elems fic">
+          <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.procedure.title }}</div>
+          <div class="notes__main_block__main_elems__price otes__main_blockWidth">{{ booking.price_final }} руб</div>
+        </div>
+      </div>
+      <div class="notes__main_block__main_items">
+        <div class="notes__main_block__main_elems fic">
+          <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Мастер:</div>
+          <div class="notes__main_block__main_elems__intro otes__main_blockWidth">Дата и время:</div>
+        </div>
+        <div class="notes__main_block__main_elems fic">
+          <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ booking.specialist.full_name }}</div>
+          <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ booking.start_at|date:"d F - H:i" }} </div>
+        </div>
+      </div>
+    </div>
+    <hr class="notes__block_hr">
+    <div class="notes__footer fic">
+      <a href="#" class="notes__footer_link rewiewPopupOpen" data-specialist-id="{{ booking.specialist_id }}">Оставить отзыв</a>
+      <a href="#" class="notes__footer_link tipsPopupOpen" data-booking-id="{{ booking.id }}">Чаевые</a>
+      {% if variant == "upcoming" %}
+        <button type="button" class="notes__footer_link notes__cancelBtn" data-booking-id="{{ booking.id }}" data-url="{% url 'api_cancel_booking' booking.id %}" style="background:none;border:0;padding:0;cursor:pointer;">Отменить</button>
+        {% if booking.status != 'confirmed' %}
+          <form action="{% url 'api_payment' booking.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="notes__footer_btn">Оплатить</button>
+          </form>
+          <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
+        {% endif %}
+      {% else %}
+        {% if booking.status == 'confirmed' %}
+          <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
