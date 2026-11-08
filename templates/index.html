@@ -205,8 +205,51 @@
 {% block extra_js %}
 <script>
 $(function () {
-	function refreshSlider($slider) {
-		if ($slider.hasClass('slick-initialized')) $slider.slick('refresh');
+	function prepareSlider($slider) {
+		if ($slider.hasClass('slick-initialized')) $slider.slick('unslick');
+		$slider.empty();
+	}
+
+	function initSalons($slider) {
+		$slider.slick({
+			arrows: true,
+			slidesToShow: 3,
+			infinite: true,
+			prevArrow: $('.salons .leftArrow'),
+			nextArrow: $('.salons .rightArrow'),
+			responsive: [
+				{breakpoint: 991, settings: {centerMode: true, slidesToShow: 2}},
+				{breakpoint: 575, settings: {slidesToShow: 1}}
+			]
+		});
+	}
+
+	function initServices($slider) {
+		$slider.slick({
+			arrows: true,
+			slidesToShow: 4,
+			prevArrow: $('.services .leftArrow'),
+			nextArrow: $('.services .rightArrow'),
+			responsive: [
+				{breakpoint: 1199, settings: {slidesToShow: 3}},
+				{breakpoint: 991, settings: {centerMode: true, slidesToShow: 2}},
+				{breakpoint: 575, settings: {slidesToShow: 1}}
+			]
+		});
+	}
+
+	function initMasters($slider) {
+		$slider.slick({
+			arrows: true,
+			slidesToShow: 4,
+			prevArrow: $('.masters .leftArrow'),
+			nextArrow: $('.masters .rightArrow'),
+			responsive: [
+				{breakpoint: 1199, settings: {slidesToShow: 3}},
+				{breakpoint: 991, settings: {slidesToShow: 2}},
+				{breakpoint: 575, settings: {slidesToShow: 1}}
+			]
+		});
 	}
 
 	function pluralReviews(n) {
@@ -220,8 +263,8 @@ $(function () {
 	// --- Салоны ---
 	$.get('/api/salons/', function (salons) {
 		const $container = $('#salonsContainer');
-		$container.empty();
-		if (!salons.length) { $container.html('<p>Салоны пока не добавлены.</p>'); return; }
+		prepareSlider($container);
+		if (!salons.length) { $container.html('<p>Салоны пока не добавлены.</p>'); initSalons($container); return; }
 		salons.forEach(function (salon) {
 			const img = salon.image || "{% static 'img/salons/salon1.svg' %}";
 			$container.append(`
@@ -236,14 +279,19 @@ $(function () {
 				</div>
 			`);
 		});
-		refreshSlider($('#salonsContainer'));
-	}).fail(function () { $('#salonsContainer').html('<p>Не удалось загрузить салоны.</p>'); });
+		initSalons($container);
+	}).fail(function () {
+		const $container = $('#salonsContainer');
+		prepareSlider($container);
+		$container.html('<p>Не удалось загрузить салоны.</p>');
+		initSalons($container);
+	});
 
 	// --- Услуги ---
 	$.get('/api/procedures/', function (procedures) {
 		const $container = $('#servicesContainer');
-		$container.empty();
-		if (!procedures.length) { $container.html('<p>Услуги пока не добавлены.</p>'); return; }
+		prepareSlider($container);
+		if (!procedures.length) { $container.html('<p>Услуги пока не добавлены.</p>'); initServices($container); return; }
 		procedures.forEach(function (procedure) {
 			const img = procedure.image || "{% static 'img/services/service1.svg' %}";
 			$container.append(`
@@ -258,14 +306,19 @@ $(function () {
 				</div>
 			`);
 		});
-		refreshSlider($('#servicesContainer'));
-	}).fail(function () { $('#servicesContainer').html('<p>Не удалось загрузить услуги.</p>'); });
+		initServices($container);
+	}).fail(function () {
+		const $container = $('#servicesContainer');
+		prepareSlider($container);
+		$container.html('<p>Не удалось загрузить услуги.</p>');
+		initServices($container);
+	});
 
 	// --- Мастера ---
 	$.get('/api/specialists/', function (specialists) {
 		const $container = $('#mastersContainer');
-		$container.empty();
-		if (!specialists.length) { $container.html('<p>Мастера пока не добавлены.</p>'); return; }
+		prepareSlider($container);
+		if (!specialists.length) { $container.html('<p>Мастера пока не добавлены.</p>'); initMasters($container); return; }
 		specialists.forEach(function (specialist) {
 			const img = specialist.photo || "{% static 'img/masters/master1.svg' %}";
 			$container.append(`
@@ -294,8 +347,13 @@ $(function () {
 				</div>
 			`);
 		});
-		refreshSlider($('#mastersContainer'));
-	}).fail(function () { $('#mastersContainer').html('<p>Не удалось загрузить мастеров.</p>'); });
+		initMasters($container);
+	}).fail(function () {
+		const $container = $('#mastersContainer');
+		prepareSlider($container);
+		$container.html('<p>Не удалось загрузить мастеров.</p>');
+		initMasters($container);
+	});
 });
 </script>
 {% endblock %}

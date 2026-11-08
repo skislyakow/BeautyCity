@@ -238,6 +238,9 @@ opacity: 0.3;
 .salons__slider_arrows {
 	justify-content: space-between;
 }
+.salons__slider_arrows .slider__arrows {
+	margin-left: auto;
+}
 .salonsSliderMob {
 	display: none;
 }
