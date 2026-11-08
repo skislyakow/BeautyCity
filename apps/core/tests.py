@@ -13,6 +13,8 @@ from django.utils import timezone
 
 from apps.core.models import (
     Booking,
+    ConsentAcceptance,
+    ConsentDocument,
     CustomerProfile,
     Procedure,
     ProcedureOffering,
@@ -278,6 +280,41 @@ class BookingCreationTests(TransactionTestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
         self.assertEqual(self.client.session["guest_booking_ids"], [response.json()["id"]])
         self.assertFalse(User.objects.filter(username="+79990000000").exists())
+
+    def test_records_consent_acceptance_when_accepted(self):
+        document = ConsentDocument.objects.create(
+            title="Согласие", file="consents/test.pdf", is_active=True
+        )
+        payload = self._payload(phone="8 (999) 000-00-00")
+        payload["consent_accepted"] = True
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            201,
+            response.json() if hasattr(response, "json") else response.content,
+        )
+        acceptance = ConsentAcceptance.objects.get()
+        self.assertEqual(acceptance.document, document)
+        self.assertEqual(acceptance.phone, "+79990000000")
+        self.assertIsNone(acceptance.user)
+
+    def test_does_not_record_consent_without_acceptance(self):
+        ConsentDocument.objects.create(title="Согласие", file="consents/test.pdf", is_active=True)
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload()),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(ConsentAcceptance.objects.count(), 0)
 
     def test_guest_notes_show_only_created_booking(self):
         other = self._create_booking(start_at=self.start_at + timedelta(hours=2))

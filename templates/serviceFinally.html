@@ -177,6 +177,7 @@ $(function () {
 				start_at: startAt,
 				end_at: endAt,
 				promo_code: $('input[name="promo_code"]').val(),
+				consent_accepted: $('#bookingForm input[type="checkbox"].contacts__form_checkbox').is(':checked'),
 			}),
 			headers: {'X-CSRFToken': getCookie('csrftoken')},
 		})

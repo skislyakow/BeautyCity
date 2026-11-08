@@ -18,6 +18,8 @@ from rest_framework.response import Response
 from .models import (
     Booking,
     CallbackRequest,
+    ConsentAcceptance,
+    ConsentDocument,
     Procedure,
     ProcedureOffering,
     PromoCode,
@@ -135,6 +137,19 @@ def available_slots(request):
     return Response({"slots": slots})
 
 
+def _record_booking_consent(request, booking, consent_accepted):
+    if not consent_accepted:
+        return
+    document = ConsentDocument.objects.filter(is_active=True).order_by("-uploaded_at").first()
+    if not document:
+        return
+    ConsentAcceptance.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        phone=booking.phone,
+        document=document,
+    )
+
+
 def _create_booking_once(request):
     serializer = BookingCreateSerializer(data=request.data)
 
@@ -146,6 +161,7 @@ def _create_booking_once(request):
     specialist = serializer.validated_data.get("specialist")
     start_at = serializer.validated_data.get("start_at")
     promo = serializer.validated_data.pop("promo_code_obj", None)
+    consent_accepted = serializer.validated_data.pop("consent_accepted", False)
 
     offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
     if not offering:
@@ -184,6 +200,7 @@ def _create_booking_once(request):
                 price_final=price_final,
                 end_at=end_at,
             )
+            _record_booking_consent(request, booking, consent_accepted)
     except IntegrityError:
         return Response({"error": "Время уже занято"}, status=409)
 

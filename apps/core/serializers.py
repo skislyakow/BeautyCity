@@ -9,6 +9,7 @@ from .models import (
     Salon,
     Specialist,
     normalize_phone,
+    phone_validator,
 )
 from .slots import get_available_slots
 
@@ -88,9 +89,11 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(max_length=20)
     promo_code = serializers.CharField(
         write_only=True, required=False, allow_blank=True, allow_null=True
     )
+    consent_accepted = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Booking
@@ -104,8 +107,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             "start_at",
             "end_at",
             "promo_code",
+            "consent_accepted",
         ]
         extra_kwargs = {"promo_code": {"required": False, "allow_null": True}}
+
+    def validate_phone(self, value):
+        normalized = normalize_phone(value)
+        try:
+            phone_validator(normalized or value)
+        except Exception as err:
+            raise serializers.ValidationError(
+                "Телефон должен быть в формате +79998887766 (10–15 цифр)."
+            ) from err
+        return normalized or value
 
     def validate(self, data):
         specialist = data.get("specialist")
