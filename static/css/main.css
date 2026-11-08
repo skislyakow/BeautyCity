@@ -236,7 +236,7 @@ color: #323232;
 opacity: 0.3;
 }
 .salons__slider_arrows {
-
+	justify-content: space-between;
 }
 .salonsSliderMob {
 	display: none;
