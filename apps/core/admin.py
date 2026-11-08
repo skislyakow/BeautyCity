@@ -12,7 +12,6 @@ from .models import (
     PromoCode,
     Review,
     Salon,
-    SiteSettings,
     Specialist,
     SpecialistSalon,
     Tip,
@@ -138,11 +137,6 @@ class BookingAdmin(admin.ModelAdmin):
     list_filter = ("status", "source", "salon", "procedure")
     search_fields = ("phone", "customer_name", "specialist__full_name")
     date_hierarchy = "start_at"
-
-
-@admin.register(SiteSettings)
-class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ("manager_phone",)
 
 
 @admin.register(CallbackRequest)

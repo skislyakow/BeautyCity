@@ -341,22 +341,6 @@ class Booking(models.Model):
         return int(self.promo_code.discount_percent)
 
 
-class SiteSettings(models.Model):
-    """
-    Чтобы "показать номер менеджера" и хранить 1-2 глобальные настройки.
-    Ожидается одна запись.
-    """
-
-    manager_phone = models.CharField("Телефон менеджера", max_length=20, blank=True)
-
-    class Meta:
-        verbose_name = "Настройки сайта"
-        verbose_name_plural = "Настройки сайта"
-
-    def __str__(self):
-        return "Настройки сайта"
-
-
 class CallbackRequest(models.Model):
     """Заявка на обратный звонок (кнопка «Перезвоните мне»)."""
 

@@ -203,17 +203,16 @@ git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD -- \
   статусов в Python-коде (`payment_views.py`, `views.py`).
   **Сделано:** оставшиеся строковые сравнения/фильтры в `views.py` заменены на
   константы `Booking.Status.*`; в `payment_views.py` уже использовались константы.
-- [~] **18. Удалить мёртвый код или реализовать.**
-  **Сделано:** удалён неиспользуемый `BookingForm`. Реализовано сохранение
-  согласия (`ConsentAcceptance` для активного `ConsentDocument`) в ключевых
-  потоках: создание записи (`/api/bookings/`, `consent_accepted` из формы),
-  отправка отзыва (`/api/reviews/`), заявка на обратный звонок (`/callback/`)
-  и запрос SMS-кода авторизации (`/phone-login/`). Фиксируются пользователь
-  (если авторизован) и нормализованный телефон, где он доступен.
-  **Оставлено/уточнено:** `SiteSettings` используется в админке/сидах, но в
-  продуктовой логике пока не задействован; `Booking.discount_percent` —
-  используемое свойство (процент из `promo_code`). Удаление моделей/полей
-  требует миграций и продуктового решения.
+- [x] **18. Удалить мёртвый код или реализовать.**
+  **Сделано:** удалён неиспользуемый `BookingForm`; удалён неиспользуемый
+  `SiteSettings` (модель/админка/сид, миграция `0007_remove_sitesettings`).
+  Реализовано сохранение согласия (`ConsentAcceptance` для активного
+  `ConsentDocument`) в ключевых потоках: создание записи (`/api/bookings/`,
+  `consent_accepted` из формы), отправка отзыва (`/api/reviews/`), заявка на
+  обратный звонок (`/callback/`) и запрос SMS-кода авторизации
+  (`/phone-login/`). Фиксируются пользователь (если авторизован) и
+  нормализованный телефон, где он доступен. `Booking.discount_percent` —
+  используемое свойство (процент из `promo_code`).
 - [x] **19. Почистить `seed_db.py`:** `data.pop("image")`/`avatar` мутировал
   модульные константы, сиды нельзя было вызвать дважды.
   **Сделано:** сиды читают `image`/`avatar` без мутации и исключают их из
@@ -292,9 +291,11 @@ README описывает новую структуру, поэтому AGENTS.m
   на каждом рендере, дублируя backfill в `views.py:158-160`.
 - **Middle Man** — `views.py:176-178` `initiate_payment` только повторно
   достаёт booking и делегирует в `create_payment`, который достаёт его снова.
-- **Speculative Generality** — никогда не вызываются: `BookingForm`,
-  `ConsentAcceptance`, `SiteSettings`, `Booking.discount_percent`.
-  `index.html:110-181` хардкодит отзывы, хотя `Review` существует.
+- **Speculative Generality** — на момент ревью: `BookingForm`,
+  `ConsentAcceptance`, `SiteSettings`, `Booking.discount_percent`, хардкод
+  отзывов в шаблоне. **Исправлено/закрыто в последующих фиксациях:** удалены
+  `BookingForm`/`SiteSettings`, `ConsentAcceptance` используется для фиксации
+  согласия, `discount_percent` — используемое свойство, отзывы берутся из БД.
 - **Deploy risk** — `deploy.yml:34-35` запускает `seed_db` и `ensure_admin`
   (хардкод `Admin/Admin`, `ensure_admin.py:7`) на продакшене.
 - **Mysterious Name** — `seed_db.py:380` мутирует модульные константы через
@@ -337,8 +338,7 @@ Risks & Mitigations). Устаревшая структура `accounts/salons/.
   нигде не сохраняется.
 - Деплой запускает `seed_db` и `ensure_admin` на каждый push в `main`:
   демо-записи на продакшене и сброс пароля `Admin/Admin`.
-- `/api/admin/stats/` (публичный, не используется UI); `SiteSettings.manager_phone`
-  не используется.
+- `/api/admin/stats/` (публичный, не используется UI).
 
 ### (c) Implemented but wrong
 

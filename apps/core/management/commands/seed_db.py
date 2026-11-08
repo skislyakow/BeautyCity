@@ -16,7 +16,6 @@ from apps.core.models import (
     PromoCode,
     Review,
     Salon,
-    SiteSettings,
     Specialist,
     SpecialistSalon,
     WorkShift,
@@ -487,13 +486,6 @@ def seed_reviews(specialists):
     return created
 
 
-def seed_sitesettings():
-    SiteSettings.objects.get_or_create(
-        pk=1,
-        defaults={"manager_phone": "+79179023800"},
-    )
-
-
 def seed_consents():
     if ConsentDocument.objects.exists():
         return
@@ -579,9 +571,6 @@ class Command(BaseCommand):
             self.stdout.write("Создание отзывов...")
             created_reviews = seed_reviews(specialists)
             self.stdout.write(f"  создано {created_reviews} новых отзывов")
-
-            self.stdout.write("Создание настроек сайта...")
-            seed_sitesettings()
 
             self.stdout.write("Создание согласия на обработку данных...")
             seed_consents()
