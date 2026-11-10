@@ -995,7 +995,7 @@ class CustomerProfileTests(TestCase):
         response = self.client.get("/profile/")
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response.url)
+        self.assertEqual(response.url, "/?next=/profile/")
 
     def test_profile_shows_neutral_avatar_by_default(self):
         self.client.force_login(self.user)
