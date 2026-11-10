@@ -13,6 +13,12 @@ from django.db import IntegrityError, OperationalError, close_old_connections, t
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
+from apps.core.management.commands.ensure_admin import (
+    ADMIN_PASSWORD,
+    ADMIN_PHONE,
+    ADMIN_USERNAME,
+    ensure_demo_admin,
+)
 from apps.core.models import (
     Booking,
     CallbackRequest,
@@ -1038,3 +1044,23 @@ class CustomerProfileTests(TestCase):
             self.profile.refresh_from_db()
             self.assertTrue(self.profile.avatar)
             self.assertIn("avatars/", self.profile.avatar.name)
+
+
+class DemoAdminTests(TestCase):
+    def test_ensure_demo_admin_creates_staff_superuser(self):
+        user, created = ensure_demo_admin()
+
+        self.assertTrue(created)
+        self.assertEqual(user.username, ADMIN_USERNAME)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password(ADMIN_PASSWORD))
+        self.assertEqual(user.profile.phone, ADMIN_PHONE)
+
+    def test_ensure_demo_admin_is_idempotent(self):
+        ensure_demo_admin()
+        user, created = ensure_demo_admin()
+
+        self.assertFalse(created)
+        self.assertEqual(user.username, ADMIN_USERNAME)
+        self.assertEqual(User.objects.filter(username=ADMIN_USERNAME).count(), 1)

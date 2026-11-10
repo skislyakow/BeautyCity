@@ -8,30 +8,37 @@ ADMIN_PASSWORD = "Admin"
 ADMIN_PHONE = "+79999999999"
 
 
+def ensure_demo_admin():
+    """Создаёт/обновляет демо-суперпользователя и возвращает (user, created)."""
+    user, created = User.objects.get_or_create(
+        username=ADMIN_USERNAME,
+        defaults={
+            "first_name": "Системный администратор",
+            "is_staff": True,
+            "is_superuser": True,
+        },
+    )
+    user.is_staff = True
+    user.is_superuser = True
+    user.set_password(ADMIN_PASSWORD)
+    user.save()
+
+    profile, _ = CustomerProfile.objects.get_or_create(
+        user=user,
+        defaults={"phone": ADMIN_PHONE},
+    )
+    if profile.phone != ADMIN_PHONE:
+        profile.phone = ADMIN_PHONE
+        profile.save(update_fields=["phone"])
+
+    return user, created
+
+
 class Command(BaseCommand):
     help = "Создаёт/обновляет системного администратора (Джанго-админка + админка сайта)"
 
     def handle(self, *args, **options):
-        user, created = User.objects.get_or_create(
-            username=ADMIN_USERNAME,
-            defaults={
-                "first_name": "Системный администратор",
-                "is_staff": True,
-                "is_superuser": True,
-            },
-        )
-        user.is_staff = True
-        user.is_superuser = True
-        user.set_password(ADMIN_PASSWORD)
-        user.save()
-
-        profile, profile_created = CustomerProfile.objects.get_or_create(
-            user=user,
-            defaults={"phone": ADMIN_PHONE},
-        )
-        if profile.phone != ADMIN_PHONE:
-            profile.phone = ADMIN_PHONE
-            profile.save(update_fields=["phone"])
+        _, created = ensure_demo_admin()
 
         if created:
             self.stdout.write(

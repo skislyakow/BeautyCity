@@ -8,6 +8,12 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
+from apps.core.management.commands.ensure_admin import (
+    ADMIN_PASSWORD,
+    ADMIN_PHONE,
+    ADMIN_USERNAME,
+    ensure_demo_admin,
+)
 from apps.core.models import (
     Booking,
     ConsentDocument,
@@ -581,4 +587,16 @@ class Command(BaseCommand):
             self.stdout.write("Создание примерных записей...")
             seed_bookings()
 
+            self.stdout.write("Создание демо-администратора...")
+            ensure_demo_admin()
+            self.stdout.write(f"  {ADMIN_USERNAME} / {ADMIN_PASSWORD}")
+
         self.stdout.write(self.style.SUCCESS("БД успешно заполнена"))
+        self.stdout.write("")
+        self.stdout.write(self.style.MIGRATE_HEADING("Демо-доступ:"))
+        self.stdout.write(
+            f"  Django-админка: /admin/ — логин {ADMIN_USERNAME}, пароль {ADMIN_PASSWORD}"
+        )
+        self.stdout.write(
+            f"  Сайт (вход по SMS): телефон {ADMIN_PHONE}, код 1234 (панель /dashboard/)"
+        )
