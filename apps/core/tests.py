@@ -1,4 +1,5 @@
 import json
+import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, time, timedelta
@@ -7,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, OperationalError, close_old_connections, transaction
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
@@ -881,3 +883,158 @@ class ConsentFlowTests(TestCase):
         response = self.client.post("/phone-login/", data={"tel": "+79990000089"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ConsentAcceptance.objects.count(), 0)
+
+
+class CustomerProfileTests(TestCase):
+    def setUp(self):
+        self.salon = Salon.objects.create(name="Салон", address="Адрес")
+        self.procedure = Procedure.objects.create(
+            title="Стрижка",
+            duration_minutes=60,
+            base_price=Decimal("1000.00"),
+        )
+        ProcedureOffering.objects.create(
+            salon=self.salon,
+            procedure=self.procedure,
+            price=Decimal("1000.00"),
+        )
+        self.date = timezone.localdate() + timedelta(days=1)
+        self.start_at = timezone.make_aware(datetime.combine(self.date, time(10, 0)))
+        self.specialist = Specialist.objects.create(full_name="Мастер")
+        self.specialist.procedures.add(self.procedure)
+        SpecialistSalon.objects.create(specialist=self.specialist, salon=self.salon)
+        WorkShift.objects.create(
+            salon=self.salon,
+            specialist=self.specialist,
+            date=self.date,
+            start_time=time(9, 0),
+            end_time=time(18, 0),
+        )
+
+        self.user = User.objects.create_user(username="+79990000101", password="pass")
+        self.profile = CustomerProfile.objects.create(user=self.user, phone="+79990000101")
+
+    def _booking_payload(self, *, name="Анна"):
+        end_at = self.start_at + timedelta(minutes=self.procedure.duration_minutes)
+        return {
+            "salon": self.salon.id,
+            "procedure": self.procedure.id,
+            "specialist": self.specialist.id,
+            "customer_name": name,
+            "phone": "+79990000101",
+            "start_at": self.start_at.isoformat(),
+            "end_at": end_at.isoformat(),
+        }
+
+    def _guest_booking(self, *, name="Гость", phone="+79990000102"):
+        end_at = self.start_at + timedelta(minutes=self.procedure.duration_minutes)
+        return Booking.objects.create(
+            salon=self.salon,
+            procedure=self.procedure,
+            specialist=self.specialist,
+            customer_name=name,
+            phone=phone,
+            start_at=self.start_at,
+            end_at=end_at,
+            price_original=Decimal("1000.00"),
+            price_final=Decimal("1000.00"),
+        )
+
+    def test_booking_saves_customer_name_to_profile(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/api/bookings/",
+            data=json.dumps(self._booking_payload()),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.first_name, "Анна")
+
+    def test_service_finally_prefills_name_from_profile(self):
+        self.profile.first_name = "Анна"
+        self.profile.save(update_fields=["first_name"])
+        self.client.force_login(self.user)
+
+        response = self.client.get("/service-finally/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Анна"')
+
+    def test_service_finally_prefills_guest_name_and_phone(self):
+        booking = self._guest_booking()
+        session = self.client.session
+        session["guest_booking_ids"] = [booking.id]
+        session.save()
+
+        response = self.client.get("/service-finally/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Гость"')
+        self.assertContains(response, 'value="+79990000102"')
+
+    def test_phone_confirm_migrates_guest_name_to_profile(self):
+        session = self.client.session
+        session["auth_phone"] = "+79990000103"
+        session["auth_code"] = "1234"
+        session["guest_customer_name"] = "Гость"
+        session.save()
+
+        response = self.client.post(
+            "/phone-confirm/",
+            {"num1": "1", "num2": "2", "num3": "3", "num4": "4"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        user = User.objects.get(username="+79990000103")
+        self.assertEqual(user.profile.first_name, "Гость")
+
+    def test_profile_requires_authentication(self):
+        response = self.client.get("/profile/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_profile_shows_neutral_avatar_by_default(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get("/profile/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "img/avatars/user.svg")
+
+    def test_profile_updates_name_and_gender(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/profile/",
+            {"first_name": " Иван ", "gender": CustomerProfile.Gender.MALE},
+        )
+
+        self.assertRedirects(response, "/profile/")
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.first_name, "Иван")
+        self.assertEqual(self.profile.gender, CustomerProfile.Gender.MALE)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Иван")
+
+    def test_profile_avatar_upload(self):
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            self.client.force_login(self.user)
+            upload = SimpleUploadedFile(
+                "avatar.svg",
+                b'<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+                content_type="image/svg+xml",
+            )
+
+            response = self.client.post(
+                "/profile/",
+                {"first_name": "Анна", "gender": CustomerProfile.Gender.FEMALE, "avatar": upload},
+            )
+
+            self.assertRedirects(response, "/profile/")
+            self.profile.refresh_from_db()
+            self.assertTrue(self.profile.avatar)
+            self.assertIn("avatars/", self.profile.avatar.name)

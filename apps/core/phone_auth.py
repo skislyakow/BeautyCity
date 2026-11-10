@@ -97,6 +97,12 @@ def phone_confirm_view(request):
         return JsonResponse({"status": "error", "message": "Неверный код"}, status=400)
 
     login_by_phone(request, auth_phone)
+    guest_name = request.session.get("guest_customer_name", "")
+    if guest_name:
+        profile = getattr(request.user, "profile", None)
+        if profile and not profile.first_name:
+            profile.first_name = guest_name
+            profile.save(update_fields=["first_name"])
     request.session.pop("auth_phone", None)
     request.session.pop("auth_code", None)
     request.session.pop("auth_code_created_at", None)

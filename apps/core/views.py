@@ -3,7 +3,9 @@ from decimal import Decimal
 from random import uniform
 from time import sleep
 
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, OperationalError, transaction
 from django.db.models import F, Q, Sum
 from django.http import JsonResponse
@@ -15,9 +17,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from .forms import ProfileForm
 from .models import (
     Booking,
     CallbackRequest,
+    CustomerProfile,
     Procedure,
     ProcedureOffering,
     PromoCode,
@@ -225,9 +229,16 @@ def create_booking(request):
 
     booking = result
 
-    if request.user.is_authenticated and booking.customer_name and not request.user.first_name:
-        request.user.first_name = booking.customer_name
-        request.user.save(update_fields=["first_name"])
+    if booking.customer_name:
+        request.session["guest_customer_name"] = booking.customer_name
+        if request.user.is_authenticated:
+            profile = getattr(request.user, "profile", None)
+            if profile and not profile.first_name:
+                profile.first_name = booking.customer_name
+                profile.save(update_fields=["first_name"])
+            if not request.user.first_name:
+                request.user.first_name = booking.customer_name
+                request.user.save(update_fields=["first_name"])
 
     # Не входим в аккаунт по телефону из формы: код не подтверждён.
     # Даём текущей сессии доступ только к этой записи.
@@ -388,9 +399,80 @@ def service(request):
     return render(request, "service.html")
 
 
+def _get_booking_prefill(request):
+    """Имя и телефон для формы записи из профиля или прошлых записей."""
+    if request.user.is_authenticated:
+        profile = getattr(request.user, "profile", None)
+        phone = get_user_phone(request.user)
+        name = (profile.first_name if profile else "") or request.user.first_name
+        if not name and phone:
+            name = (
+                Booking.objects.filter(phone=phone)
+                .exclude(customer_name="")
+                .order_by("-created_at")
+                .values_list("customer_name", flat=True)
+                .first()
+                or ""
+            )
+        return {
+            "prefill_name": name,
+            "prefill_phone": (profile.phone if profile else "") or phone,
+        }
+
+    latest = (
+        Booking.objects.filter(id__in=get_guest_booking_ids(request))
+        .exclude(customer_name="")
+        .order_by("-created_at")
+        .first()
+    )
+    if latest:
+        return {"prefill_name": latest.customer_name, "prefill_phone": latest.phone}
+    return {
+        "prefill_name": request.session.get("guest_customer_name", ""),
+        "prefill_phone": "",
+    }
+
+
 def service_finally(request):
     """Страница подтверждения записи"""
-    return render(request, "serviceFinally.html")
+    return render(request, "serviceFinally.html", _get_booking_prefill(request))
+
+
+@login_required
+def profile_view(request):
+    """Просмотр и редактирование профиля клиента."""
+    profile, _ = CustomerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"phone": get_user_phone(request.user)},
+    )
+
+    if request.method == "POST":
+        old_avatar_name = profile.avatar.name if profile.avatar else ""
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            if form.cleaned_data.get("remove_avatar") and profile.avatar:
+                profile.avatar.delete(save=False)
+                profile.avatar = None
+            profile.save()
+            new_avatar_name = profile.avatar.name if profile.avatar else ""
+            if old_avatar_name and old_avatar_name != new_avatar_name:
+                profile.avatar.storage.delete(old_avatar_name)
+            request.user.first_name = profile.first_name
+            request.user.save(update_fields=["first_name"])
+            messages.success(request, "Профиль сохранён")
+            return redirect("profile")
+    else:
+        form = ProfileForm(instance=profile)
+
+    return render(
+        request,
+        "profile.html",
+        {
+            "form": form,
+            "profile": profile,
+        },
+    )
 
 
 def notes(request):

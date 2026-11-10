@@ -27,12 +27,12 @@
 						{% if request.user.is_authenticated %}
 							{% if request.user.is_staff %}
 								<a href="{% url 'admin' %}" class="header__block_auth">
-									<img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
+									<img src="{{ user_avatar }}" alt="account" class="header__account_img">
 									<span class="header__block_auth__intro">Статистика</span>
 								</a>
 							{% else %}
 								<a href="{% url 'notes' %}" class="header__block_auth">
-									<img src="{% static 'img/avatars/1.svg' %}" alt="account" class="header__account_img">
+									<img src="{{ user_avatar }}" alt="account" class="header__account_img">
 									<span class="header__block_auth__intro">{{ account_name }}</span>
 								</a>
 							{% endif %}

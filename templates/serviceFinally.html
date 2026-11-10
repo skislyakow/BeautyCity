@@ -21,12 +21,12 @@
 						<form id="bookingForm" class="serviceFinally__form" style="display:none;">
 							<div class="serviceFinally__form_itesm">
 								<div class="contacts__form_block fic">
-									<input type="text" name="customer_name" class="contacts__form_iunput" placeholder="Введите имя" required>
+									<input type="text" name="customer_name" class="contacts__form_iunput" value="{{ prefill_name }}" placeholder="Введите имя" required>
 									<div class="contacts__form_inputBlock">
 										{% if request.user.profile.phone %}
 											<input type="text" name="phone" class="contacts__form_iunput" value="{{ request.user.profile.phone }}" readonly required>
 										{% else %}
-											<input type="text" name="phone" class="contacts__form_iunput" placeholder="+7(999)999--99-99" required>
+											<input type="text" name="phone" class="contacts__form_iunput" value="{{ prefill_phone }}" placeholder="+7(999)999--99-99" required>
 										{% endif %}
 									</div>
 								</div>

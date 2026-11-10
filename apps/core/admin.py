@@ -128,8 +128,9 @@ class ConsentAcceptanceAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerProfile)
 class CustomerProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "phone", "created_at")
-    search_fields = ("user__username", "user__email", "phone")
+    list_display = ("user", "first_name", "phone", "gender", "created_at")
+    list_filter = ("gender",)
+    search_fields = ("user__username", "user__email", "first_name", "phone")
     date_hierarchy = "created_at"
 
 

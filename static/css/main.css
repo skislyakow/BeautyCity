@@ -1740,6 +1740,154 @@ line-height: 33px;
 color: #F6A912;
 }
 /*End notes.html*/
+/* profile.html*/
+.profile {
+	padding-top: 40px;
+	padding-bottom: 70px;
+}
+.profile__title {
+	font-weight: 500;
+	font-size: 40px;
+	line-height: 127.52%;
+	color: #323232;
+	margin-bottom: 24px;
+}
+.profile__messages {
+	margin-bottom: 16px;
+}
+.profile__message {
+	padding: 10px 14px;
+	border-radius: 5px;
+	background: #e8f5e9;
+	color: #2e7d32;
+	font-size: 14px;
+}
+.profile__form {
+	display: flex;
+	gap: 40px;
+	align-items: flex-start;
+	padding: 24px;
+	background: #fff;
+	border-radius: 10px;
+	box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.02);
+}
+.profile__avatar {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+}
+.profile__avatar_img {
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid rgba(0, 0, 0, 0.08);
+	background: #f8f9fa;
+}
+.profile__avatar_input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	overflow: hidden;
+}
+.profile__avatar_btn {
+	position: relative;
+	display: inline-block;
+	padding: 10px 16px;
+	border-radius: 5px;
+	background: #FFCD07;
+	color: #fff;
+	font-weight: 500;
+	font-size: 14px;
+	cursor: pointer;
+	text-align: center;
+}
+.profile__avatar_btn:hover {
+	background: #F6A912;
+}
+.profile__remove_avatar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: #323232;
+	opacity: 0.6;
+	cursor: pointer;
+}
+.profile__avatar_hint {
+	font-size: 11px;
+	color: #323232;
+	opacity: 0.4;
+}
+.profile__fields {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	flex: 1;
+	max-width: 360px;
+}
+.profile__label {
+	margin-top: 14px;
+	margin-bottom: 6px;
+	font-size: 14px;
+	color: #323232;
+	opacity: 0.6;
+}
+.profile__fields .contacts__form_iunput {
+	width: 100%;
+}
+.profile__gender {
+	display: inline-flex;
+	border: 0.5px solid rgba(0, 0, 0, 0.2);
+	border-radius: 5px;
+	overflow: hidden;
+}
+.profile__gender_option {
+	position: relative;
+	cursor: pointer;
+}
+.profile__gender_option input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.profile__gender_option span {
+	display: block;
+	padding: 10px 18px;
+	font-size: 14px;
+	color: #323232;
+	background: #fff;
+	transition: background 0.15s, color 0.15s;
+}
+.profile__gender_option input:checked + span {
+	background: #FFCD07;
+	color: #fff;
+}
+.profile__phone {
+	margin: 18px 0 20px;
+	font-size: 14px;
+	color: #323232;
+	opacity: 0.6;
+}
+.profile__error {
+	margin-top: 4px;
+	font-size: 12px;
+	color: #e74c3c;
+}
+@media (max-width: 767.98px) {
+	.profile__form {
+		flex-direction: column;
+		gap: 24px;
+	}
+	.profile__fields {
+		max-width: 100%;
+		width: 100%;
+	}
+}
+/*End profile.html*/
 /* admin.html*/
 .admin {
 	padding-top: 40px;

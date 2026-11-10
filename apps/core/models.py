@@ -8,6 +8,7 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.db import models
+from django.templatetags.static import static
 from django.utils import timezone
 
 phone_validator = RegexValidator(
@@ -284,10 +285,29 @@ class CustomerProfile(models.Model):
     Удобно для подсчёта регистраций и хранения телефона.
     """
 
+    class Gender(models.TextChoices):
+        UNKNOWN = "unknown", "Не указан"
+        MALE = "male", "Мужской"
+        FEMALE = "female", "Женский"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator], blank=True)
+    first_name = models.CharField("Имя", max_length=120, blank=True)
+    gender = models.CharField(
+        "Пол",
+        max_length=10,
+        choices=Gender.choices,
+        default=Gender.UNKNOWN,
+    )
+    avatar = models.FileField(
+        "Аватар",
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(["svg", "png", "jpg", "jpeg", "webp"])],
+    )
     created_at = models.DateTimeField("Создан", auto_now_add=True)
 
     class Meta:
@@ -296,6 +316,14 @@ class CustomerProfile(models.Model):
 
     def __str__(self):
         return f"{self.user}"
+
+    def get_avatar_url(self):
+        if self.avatar:
+            try:
+                return self.avatar.url
+            except Exception:
+                pass
+        return static("img/avatars/user.svg")
 
 
 class Booking(models.Model):

@@ -14,6 +14,7 @@ urlpatterns = [
     path("service/", views.service, name="service"),
     path("service-finally/", views.service_finally, name="service_finally"),
     path("notes/", views.notes, name="notes"),
+    path("profile/", views.profile_view, name="profile"),
     path("dashboard/", views.admin_panel, name="admin"),
     path("admin-panel/", views.admin_panel, name="admin_panel"),
     path("pay-all-unpaid/", create_bulk_payment, name="pay_all_unpaid"),

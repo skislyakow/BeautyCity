@@ -11,12 +11,12 @@
         <div class="col-md-2">
           <div class="accaunt__left">
             <div class="accaunt__ava fic">
-              <img src="{% static 'img/avatars/1.svg' %}" alt="avatar" class="accaunt__ava_img">
+              <img src="{{ user_avatar }}" alt="avatar" class="accaunt__ava_img">
               <span class="accaunt__ava_name">{{ account_name|default:guest_phone }}</span>
             </div>
             <div class="accaunt__settings fic">
               {% if request.user.is_authenticated %}
-                <a href="#" class="accaunt__settings_intro">Изменить профиль</a>
+                <a href="{% url 'profile' %}" class="accaunt__settings_intro">Изменить профиль</a>
                 <a href="{% url 'logout' %}" class="accaunt__settings_out">Выйти</a>
               {% else %}
                 <a href="#" class="authTriggerBtn accaunt__settings_intro">Войти по SMS</a>
