@@ -28,6 +28,7 @@ from .models import (
     Review,
     Salon,
     Specialist,
+    SpecialistSalon,
     Tip,
     record_consent_acceptance,
 )
@@ -109,7 +110,9 @@ def specialist_procedures(request, pk):
 @api_view(["GET"])
 def specialist_salons(request, pk):
     specialist = get_object_or_404(Specialist, id=pk)
-    salon_ids = specialist.salons.values_list("salon_id", flat=True)
+    salon_ids = SpecialistSalon.objects.filter(specialist=specialist).values_list(
+        "salon_id", flat=True
+    )
     salons = Salon.objects.filter(id__in=list(salon_ids))
     serializer = SalonSerializer(salons, many=True)
     return Response(serializer.data)

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from apps.core.models import Procedure, Salon, Specialist
+from apps.core.models import Procedure, Salon, Specialist, SpecialistSalon
 
 # специальность (ключевые слова в bio) -> ключевые слова в названии услуги (Procedure.title)
 SPECIALTY_KEYWORDS = {
@@ -57,7 +57,7 @@ class Command(BaseCommand):
 
             specialist.procedures.set(matched_procedures)
             for salon in salons:
-                specialist.salons.get_or_create(salon=salon)
+                SpecialistSalon.objects.get_or_create(specialist=specialist, salon=salon)
 
             self.stdout.write(
                 self.style.SUCCESS(

@@ -8,6 +8,7 @@ from .models import (
     PromoCode,
     Salon,
     Specialist,
+    SpecialistSalon,
     normalize_phone,
     phone_validator,
 )
@@ -153,7 +154,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Время не указано")
 
         procedure = data.get("procedure")
-        if not specialist.salons.filter(salon=salon).exists():
+        if not SpecialistSalon.objects.filter(specialist=specialist, salon=salon).exists():
             raise serializers.ValidationError(
                 f"Мастер {specialist.full_name} не работает в салоне {salon.name}"
             )
