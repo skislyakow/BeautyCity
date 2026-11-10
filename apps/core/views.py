@@ -272,6 +272,7 @@ def cancel_booking(request, booking_id):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def create_review(request):
     specialist_id = request.data.get("specialist") or request.data.get("specialist_id")
     if not specialist_id:

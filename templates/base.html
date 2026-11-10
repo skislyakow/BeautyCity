@@ -52,6 +52,7 @@
 			confirmCode: "{% url 'phone_confirm' %}"
 		};
 		window.STATIC_URL = "{% static '' %}";
+		window.IS_AUTHENTICATED = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
 	</script>
 	<script src="{% static 'js/auth.js' %}"></script>
 	{% block extra_js %}{% endblock %}

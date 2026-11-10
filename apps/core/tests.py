@@ -737,6 +737,7 @@ class ReviewTipCancelTests(TestCase):
         self.assertEqual(self.booking.status, Booking.Status.NEW)
 
     def test_create_review(self):
+        self.client.force_login(self.user)
         response = self.client.post(
             "/api/reviews/",
             data=json.dumps(
@@ -752,6 +753,22 @@ class ReviewTipCancelTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Review.objects.count(), 1)
         self.assertEqual(Review.objects.first().specialist_id, self.specialist.id)
+
+    def test_anonymous_cannot_create_review(self):
+        response = self.client.post(
+            "/api/reviews/",
+            data=json.dumps(
+                {
+                    "specialist": self.specialist.id,
+                    "author_name": "Анна",
+                    "rating": 5,
+                    "text": "Отлично",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Review.objects.count(), 0)
 
     def test_create_review_records_consent(self):
         document = ConsentDocument.objects.create(

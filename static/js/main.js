@@ -132,12 +132,26 @@ $(document).ready(function() {
 		$('#authModal').arcticmodal();
 	});
 
-	$('.rewiewPopupOpen').click(function(e) {
-		e.preventDefault();
-		$('#reviewModal .reviewPopup__specialist').val($(this).data('specialist-id') || '');
+	function openReviewModal(specialistId) {
+		$('#reviewModal .reviewPopup__specialist').val(specialistId || '');
 		$('#reviewModal .reviewPopup__error').hide().text('');
 		$('#reviewModal').arcticmodal();
+	}
+
+	$('.rewiewPopupOpen').click(function(e) {
+		e.preventDefault();
+		if (!window.IS_AUTHENTICATED) {
+			sessionStorage.setItem('openReviewAfterAuth', '1');
+			$('#authModal').arcticmodal();
+			return;
+		}
+		openReviewModal($(this).data('specialist-id') || '');
 	});
+
+	if (window.IS_AUTHENTICATED && sessionStorage.getItem('openReviewAfterAuth') === '1') {
+		sessionStorage.removeItem('openReviewAfterAuth');
+		openReviewModal('');
+	}
 
 	$('.payPopupOpen').click(function(e) {
 		e.preventDefault();
@@ -200,7 +214,7 @@ $(document).ready(function() {
 				$form.html('<div class="popup__text">Спасибо! Отзыв отправлен.</div>');
 			})
 			.fail(function(xhr) {
-				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error)) || 'Не удалось отправить отзыв';
+				var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.error || xhr.responseJSON.detail)) || 'Не удалось отправить отзыв';
 				$error.text(msg).show();
 				$btn.prop('disabled', false);
 			});
