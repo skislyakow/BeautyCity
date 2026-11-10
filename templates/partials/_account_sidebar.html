@@ -1,0 +1,52 @@
+{% load static %}
+<div class="accaunt__left">
+  <div class="accaunt__ava fic">
+    <img src="{{ user_avatar }}" alt="avatar" class="accaunt__ava_img">
+    <span class="accaunt__ava_name">{% firstof account_name guest_phone request.user.username %}</span>
+  </div>
+  <div class="accaunt__settings fic">
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'profile' %}" class="accaunt__settings_intro">Изменить профиль</a>
+      <a href="{% url 'logout' %}" class="accaunt__settings_out">Выйти</a>
+    {% else %}
+      <a href="#" class="authTriggerBtn accaunt__settings_intro">Войти по SMS</a>
+    {% endif %}
+  </div>
+  <nav>
+    <div class="accaunt__menu_title">МЕНЮ</div>
+    <ul class="accaunt__menu">
+      <li class="accaunt__menu_item {% if active == 'notes' %}active{% endif %}">
+        <a href="{% url 'notes' %}" class="accaunt__menu_item__link">
+          <div class="accaunt__menu_block fic">
+            <img src="{% static 'img/icons/list.svg' %}" alt="icon" class="accaunt__menu_icon">
+            <span class="accaunt__menu_item__link_intro">Мои записи</span>
+          </div>
+        </a>
+      </li>
+      <li class="accaunt__menu_item {% if active == 'profile' %}active{% endif %}">
+        <a href="{% url 'profile' %}" class="accaunt__menu_item__link">
+          <div class="accaunt__menu_block fic">
+            <img src="{% static 'img/icons/settings.svg' %}" alt="icon" class="accaunt__menu_icon">
+            <span class="accaunt__menu_item__link_intro">Настройки</span>
+          </div>
+        </a>
+      </li>
+      <li class="accaunt__menu_item">
+        <a href="#" class="accaunt__menu_item__link">
+          <div class="accaunt__menu_block fic">
+            <img src="{% static 'img/icons/tex.svg' %}" alt="icon" class="accaunt__menu_icon">
+            <span class="accaunt__menu_item__link_intro">Тех. поддержка</span>
+          </div>
+        </a>
+      </li>
+      <li class="accaunt__menu_item">
+        <a href="#" class="accaunt__menu_item__link">
+          <div class="accaunt__menu_block fic">
+            <img src="{% static 'img/icons/pay.svg' %}" alt="icon" class="accaunt__menu_icon">
+            <span class="accaunt__menu_item__link_intro">Платежи</span>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>

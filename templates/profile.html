@@ -4,60 +4,87 @@
 {% block title %}Профиль — Beauty City{% endblock %}
 
 {% block content %}
-<section id="profile">
+<section id="notes">
   <div class="container">
-    <div class="profile">
-      <div class="breadCrumbs">
-        <a href="{% url 'notes' %}" class="breadCrumbs__item">Мои записи</a>
-      </div>
-      <h1 class="profile__title">Профиль</h1>
-
-      {% if messages %}
-        <div class="profile__messages">
-          {% for message in messages %}
-            <div class="profile__message">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      <form method="post" enctype="multipart/form-data" class="profile__form">
-        {% csrf_token %}
-        <div class="profile__avatar">
-          <img src="{{ user_avatar }}" alt="avatar" class="profile__avatar_img" id="profileAvatarPreview">
-          <label class="profile__avatar_btn">
-            Выбрать фото
-            {{ form.avatar }}
-          </label>
-          {% if profile.avatar %}
-            <label class="profile__remove_avatar">
-              {{ form.remove_avatar }} Удалить фото
-            </label>
-          {% endif %}
-          <div class="profile__avatar_hint">PNG, JPG, WEBP или SVG</div>
+    <div class="notes">
+      <div class="row">
+        <div class="col-md-2">
+          {% include "partials/_account_sidebar.html" with active="profile" %}
         </div>
 
-        <div class="profile__fields">
-          <label class="profile__label" for="{{ form.first_name.id_for_label }}">Имя</label>
-          {{ form.first_name }}
-          {% if form.first_name.errors %}
-            <div class="profile__error">{{ form.first_name.errors|join:", " }}</div>
-          {% endif %}
-
-          <div class="profile__label">Пол</div>
-          <div class="profile__gender">
-            {% for value, label in form.fields.gender.choices %}
-              <label class="profile__gender_option">
-                <input type="radio" name="gender" value="{{ value }}"
-                  {% if form.gender.value == value %}checked{% elif not form.gender.value and value == 'unknown' %}checked{% endif %}>
-                <span>{{ label }}</span>
-              </label>
-            {% endfor %}
+        <div class="col-md-12 col-lg-7">
+          <div class="profile__back mob">
+            <a href="{% url 'notes' %}" class="breadCrumbs__item">Мои записи</a>
           </div>
 
-          <div class="profile__phone">Телефон: {{ profile.phone|default:"не указан" }}</div>
-          <button type="submit" class="contacts__form_btn">Сохранить</button>
+          <div class="notes__main">
+            <div class="notes__title">Профиль</div>
+            <hr class="hr">
+          </div>
+
+          {% if messages %}
+            <div class="profile__messages">
+              {% for message in messages %}
+                <div class="profile__message">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="notes__main_title">ЛИЧНЫЕ ДАННЫЕ</div>
+
+          <div class="profile__card">
+            <form method="post" enctype="multipart/form-data" class="profile__form">
+              {% csrf_token %}
+
+              <div class="profile__avatar">
+                <img src="{{ user_avatar }}" alt="avatar" class="profile__avatar_img" id="profileAvatarPreview">
+                <label class="profile__avatar_edit">
+                  Сменить фото
+                  {{ form.avatar }}
+                </label>
+                {% if profile.avatar %}
+                  <label class="profile__remove_avatar">
+                    {{ form.remove_avatar }} Удалить
+                  </label>
+                {% endif %}
+                <div class="profile__avatar_hint">JPG, PNG, WEBP или SVG</div>
+              </div>
+
+              <div class="profile__fields">
+                <div class="profile__field">
+                  <label class="profile__label" for="{{ form.first_name.id_for_label }}">Имя</label>
+                  {{ form.first_name }}
+                  {% if form.first_name.errors %}
+                    <div class="profile__error">{{ form.first_name.errors|join:", " }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="profile__field">
+                  <div class="profile__label">Пол</div>
+                  <div class="profile__gender">
+                    {% for value, label in form.fields.gender.choices %}
+                      <label class="profile__gender_option">
+                        <input type="radio" name="gender" value="{{ value }}"
+                          {% if form.gender.value == value %}checked{% elif not form.gender.value and value == 'unknown' %}checked{% endif %}>
+                        <span>{{ label }}</span>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <div class="profile__field">
+                  <label class="profile__label">Телефон</label>
+                  <input type="text" class="contacts__form_iunput profile__input_readonly"
+                         value="{{ profile.phone|default:'' }}" disabled>
+                  <div class="profile__hint">Нужен для входа по SMS и связи по записи</div>
+                </div>
+
+                <button type="submit" class="contacts__form_btn profile__submit">Сохранить</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </section>
