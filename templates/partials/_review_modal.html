@@ -5,8 +5,13 @@
 		<div class="popup__title reviewPopup__title">Отзыв</div>
 		<form action="#" class="reviewPopup__form" data-url="{% url 'api_create_review' %}">
 			{% csrf_token %}
-			<input type="hidden" name="specialist" class="reviewPopup__specialist" value="">
-			<input type="text" name="author_name" class="paymentPopup__form_input popup__input" placeholder="Введите имя" required>
+			<select name="specialist" class="paymentPopup__form_input popup__input reviewPopup__specialist" required>
+				<option value="">Выберите мастера</option>
+				{% for specialist in review_specialists %}
+					<option value="{{ specialist.id }}">{{ specialist.full_name }}</option>
+				{% endfor %}
+			</select>
+			<input type="text" name="author_name" class="paymentPopup__form_input popup__input" placeholder="Введите имя" value="{{ account_name }}" required>
 			<div class="reviewPopup__rating" style="margin-bottom:12px;">
 				<label style="font-size:14px;">Оценка:&nbsp;
 					<select name="rating" class="popup__input" style="width:auto;display:inline-block;padding:8px 12px;">

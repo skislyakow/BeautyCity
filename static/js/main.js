@@ -191,7 +191,7 @@ $(document).ready(function() {
 			return;
 		}
 		if (!$form.find('.reviewPopup__specialist').val()) {
-			$error.text('Не удалось определить мастера для отзыва').show();
+			$error.text('Выберите мастера').show();
 			return;
 		}
 		$btn.prop('disabled', true);

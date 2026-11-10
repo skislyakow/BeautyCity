@@ -857,6 +857,19 @@ class LandingReviewsTests(TestCase):
         self.assertContains(response, "Отзыв из базы данных")
         self.assertNotContains(response, "12 ноября 2022")
 
+    def test_index_exposes_review_form_with_active_specialists(self):
+        specialist = Specialist.objects.create(full_name="Активный мастер")
+        inactive = Specialist.objects.create(full_name="Неактивный мастер", is_active=False)
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Оставить отзыв")
+        self.assertContains(response, f'<option value="{specialist.id}">Активный мастер</option>')
+        self.assertNotContains(
+            response, f'<option value="{inactive.id}">Неактивный мастер</option>'
+        )
+
 
 class ConsentFlowTests(TestCase):
     def setUp(self):
@@ -1010,6 +1023,15 @@ class CustomerProfileTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "img/avatars/user.svg")
+
+    def test_profile_links_to_review_form_with_specialists(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get("/profile/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Оставить отзыв")
+        self.assertContains(response, f'<option value="{self.specialist.id}">Мастер</option>')
 
     def test_profile_updates_name_and_gender(self):
         self.client.force_login(self.user)

@@ -386,12 +386,24 @@ def admin_stats(request):
     )
 
 
+def _get_review_specialists():
+    """Активные мастера для выбора в форме отзыва."""
+    return Specialist.objects.filter(is_active=True).only("id", "full_name")
+
+
 def index(request):
     """Главная страница"""
     reviews = (
         Review.objects.exclude(text="").select_related("specialist").order_by("-created_at")[:12]
     )
-    return render(request, "index.html", {"reviews": reviews})
+    return render(
+        request,
+        "index.html",
+        {
+            "reviews": reviews,
+            "review_specialists": _get_review_specialists(),
+        },
+    )
 
 
 def service(request):
@@ -471,6 +483,7 @@ def profile_view(request):
         {
             "form": form,
             "profile": profile,
+            "review_specialists": _get_review_specialists(),
         },
     )
 
@@ -516,6 +529,7 @@ def notes(request):
         "unpaid_sum": unpaid_sum,
         "is_guest": is_guest,
         "guest_phone": guest_phone,
+        "review_specialists": _get_review_specialists(),
     }
     return render(request, "notes.html", context)
 

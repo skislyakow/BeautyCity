@@ -445,6 +445,23 @@ color: #F6A912;
 .reviews__slider_arrows {
 	    justify-content: space-between;
 }
+.reviews__actions {
+	gap: 20px;
+}
+.reviews__leave {
+	height: 45px;
+	padding: 0 24px;
+	background: #FFCD07;
+	border: none;
+	border-radius: 5px;
+	font-weight: 500;
+	font-size: 16px;
+	line-height: 127.52%;
+	color: #FFFFFF;
+}
+.reviews__leave:hover {
+	background: #F6A912;
+}
 .reviews__block {
 	background: #FFFFFF;
 /* тень */
@@ -2486,6 +2503,14 @@ color: #262626;
 	}
 	.slider__arrows {
 		display: none;
+	}
+	.reviews__actions {
+		gap: 10px;
+	}
+	.reviews__leave {
+		height: 40px;
+		padding: 0 16px;
+		font-size: 14px;
 	}
 	.contacts__locationBlock {
 		flex-direction: column;
