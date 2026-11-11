@@ -47,7 +47,7 @@ def _metadata_matches(payment, bookings):
     if not isinstance(metadata, dict):
         return False
 
-    actual = {str(booking.id) for booking in bookings}
+    actual = {str(booking.pk) for booking in bookings}
     booking_id = metadata.get("booking_id")
     booking_ids = metadata.get("booking_ids")
 
@@ -105,7 +105,7 @@ def _confirm_paid_bookings(payment_id):
 def has_booking_access(request, booking):
     if request.user.is_authenticated and get_user_phone(request.user) == booking.phone:
         return True
-    return booking.id in get_guest_booking_ids(request)
+    return booking.pk in get_guest_booking_ids(request)
 
 
 def create_payment(request, booking_id):

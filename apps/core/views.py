@@ -94,7 +94,7 @@ def salon_procedures(request, pk):
 @api_view(["GET"])
 def salon_specialists(request, pk):
     salon = get_object_or_404(Salon, id=pk)
-    specialists = Specialist.objects.filter(salons__salon_id=salon.id, is_active=True)
+    specialists = Specialist.objects.filter(salons__salon_id=salon.pk, is_active=True)
     serializer = SpecialistSerializer(specialists, many=True)
     return Response(serializer.data)
 
@@ -237,8 +237,8 @@ def create_booking(request):
                 request.user.save(update_fields=["first_name"])
 
     guest_booking_ids = get_guest_booking_ids(request)
-    if booking.id not in guest_booking_ids:
-        guest_booking_ids.append(booking.id)
+    if booking.pk not in guest_booking_ids:
+        guest_booking_ids.append(booking.pk)
     request.session["guest_booking_ids"] = guest_booking_ids[-10:]
 
     return Response(BookingSerializer(booking).data, status=201)
@@ -255,7 +255,7 @@ def cancel_booking(request, booking_id):
     ):
         allowed = True
     else:
-        allowed = booking.id in get_guest_booking_ids(request)
+        allowed = booking.pk in get_guest_booking_ids(request)
     if not allowed:
         return Response({"error": "Нет доступа к записи"}, status=403)
     if booking.status == Booking.Status.CANCELED:
@@ -291,7 +291,7 @@ def create_review(request):
         phone=get_user_phone(request.user) if request.user.is_authenticated else "",
         accepted=consent_raw in (True, "1", "true", "True", "on"),
     )
-    return Response({"id": review.id, "status": "created"}, status=201)
+    return Response({"id": review.pk, "status": "created"}, status=201)
 
 
 @api_view(["POST"])
@@ -308,7 +308,7 @@ def create_tip(request):
     ):
         allowed = True
     else:
-        allowed = booking.id in get_guest_booking_ids(request)
+        allowed = booking.pk in get_guest_booking_ids(request)
     if not allowed:
         return Response({"error": "Нет доступа к записи"}, status=403)
     try:
@@ -318,7 +318,7 @@ def create_tip(request):
     if amount <= 0:
         return Response({"error": "Сумма должна быть больше 0"}, status=400)
     tip = Tip.objects.create(booking=booking, amount=amount)
-    return Response({"id": tip.id, "status": "created"}, status=201)
+    return Response({"id": tip.pk, "status": "created"}, status=201)
 
 
 @api_view(["GET"])

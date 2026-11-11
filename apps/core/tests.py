@@ -66,7 +66,7 @@ class YooKassaWebhookTests(TestCase):
 
     def _payment(self, *, status="succeeded", amount="1000.00", metadata=None):
         if metadata is None:
-            metadata = {"booking_id": self.booking.id}
+            metadata = {"booking_id": self.booking.pk}
         return SimpleNamespace(
             status=status,
             amount=SimpleNamespace(value=amount),
@@ -145,7 +145,7 @@ class YooKassaWebhookTests(TestCase):
         self.booking.save(update_fields=["payment_id", "price_final"])
         find_one.return_value = self._payment(
             amount="1500.00",
-            metadata={"booking_ids": f"{self.booking.id},{second.id}"},
+            metadata={"booking_ids": f"{self.booking.pk},{second.pk}"},
         )
 
         response = self._post(payment_id=payment_id)
@@ -203,7 +203,7 @@ class YooKassaWebhookTests(TestCase):
     def test_payment_success_page_does_not_trust_return_url(self, find_one):
         find_one.return_value = self._payment(status="pending")
 
-        response = self.client.get(f"/payment-success/{self.booking.id}/")
+        response = self.client.get(f"/payment-success/{self.booking.pk}/")
 
         self.assertEqual(response.url, "/notes/?payment=pending")
         self.booking.refresh_from_db()
@@ -245,9 +245,9 @@ class BookingCreationTests(TransactionTestCase):
     def _payload(self, *, start_at=None, specialist=None, salon=None, phone="+79990000000"):
         start_at = start_at or self.start_at
         return {
-            "salon": (salon or self.salon).id,
-            "procedure": self.procedure.id,
-            "specialist": (specialist or self.specialist).id,
+            "salon": (salon or self.salon).pk,
+            "procedure": self.procedure.pk,
+            "specialist": (specialist or self.specialist).pk,
             "customer_name": "Клиент",
             "phone": phone,
             "start_at": start_at.isoformat(),
@@ -339,7 +339,7 @@ class BookingCreationTests(TransactionTestCase):
 
         self.assertEqual(notes.status_code, 200)
         self.assertContains(notes, f"Запись №{created_id}")
-        self.assertNotContains(notes, f"Запись №{other.id}")
+        self.assertNotContains(notes, f"Запись №{other.pk}")
 
     def test_notes_without_guest_session_redirects_home(self):
         response = self.client.get("/notes/")
@@ -603,7 +603,7 @@ class MyBookingsAuthTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.id})
+        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.pk})
 
     def test_ignores_phone_query_parameter(self):
         self.client.force_login(self.user)
@@ -611,7 +611,7 @@ class MyBookingsAuthTests(TestCase):
         response = self.client.get(self.url, {"phone": "+79990000002"})
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.id})
+        self.assertEqual({item["id"] for item in response.json()}, {self.own_booking.pk})
 
     def test_uses_profile_phone_instead_of_username(self):
         user = User.objects.create_user(username="client@example.com", password="pass")
@@ -625,7 +625,7 @@ class MyBookingsAuthTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({item["id"] for item in response.json()}, {booking.id})
+        self.assertEqual({item["id"] for item in response.json()}, {booking.pk})
 
     def test_falls_back_to_username_without_profile(self):
         user = User.objects.create_user(username="+79990000004", password="pass")
@@ -638,7 +638,7 @@ class MyBookingsAuthTests(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual({item["id"] for item in response.json()}, {booking.id})
+        self.assertEqual({item["id"] for item in response.json()}, {booking.pk})
 
     def test_notes_shows_only_own_phone_bookings(self):
         self.client.force_login(self.user)
@@ -646,25 +646,25 @@ class MyBookingsAuthTests(TestCase):
         response = self.client.get("/notes/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, f"Запись №{self.own_booking.id}")
-        self.assertNotContains(response, f"Запись №{self.other_booking.id}")
+        self.assertContains(response, f"Запись №{self.own_booking.pk}")
+        self.assertNotContains(response, f"Запись №{self.other_booking.pk}")
 
     @patch("apps.core.payment_views._configure_yookassa", return_value=False)
     def test_guest_can_pay_only_created_booking(self, _configure_yookassa):
         session = self.client.session
-        session["guest_booking_ids"] = [self.own_booking.id]
+        session["guest_booking_ids"] = [self.own_booking.pk]
         session.save()
 
-        denied = self.client.post(f"/api/payments/{self.other_booking.id}/")
+        denied = self.client.post(f"/api/payments/{self.other_booking.pk}/")
         self.assertEqual(denied.status_code, 403)
 
-        allowed = self.client.post(f"/api/payments/{self.own_booking.id}/")
+        allowed = self.client.post(f"/api/payments/{self.own_booking.pk}/")
         self.assertEqual(allowed.status_code, 400)
 
     def test_authenticated_user_cannot_pay_other_users_booking(self):
         self.client.force_login(self.user)
 
-        response = self.client.post(f"/api/payments/{self.other_booking.id}/")
+        response = self.client.post(f"/api/payments/{self.other_booking.pk}/")
 
         self.assertEqual(response.status_code, 403)
 
@@ -672,7 +672,7 @@ class MyBookingsAuthTests(TestCase):
         session = self.client.session
         session["auth_phone"] = "+79990000001"
         session["auth_code"] = "1234"
-        session["guest_booking_ids"] = [self.own_booking.id]
+        session["guest_booking_ids"] = [self.own_booking.pk]
         session.save()
 
         response = self.client.post(
@@ -682,7 +682,7 @@ class MyBookingsAuthTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("guest_booking_ids", self.client.session)
-        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.id)
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
 
 
 class ReviewTipCancelTests(TestCase):
@@ -713,23 +713,23 @@ class ReviewTipCancelTests(TestCase):
 
     def test_owner_can_cancel_booking(self):
         self.client.force_login(self.user)
-        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        response = self.client.post(f"/api/bookings/{self.booking.pk}/cancel/")
         self.assertEqual(response.status_code, 200)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.Status.CANCELED)
 
     def test_guest_session_can_cancel_booking(self):
         session = self.client.session
-        session["guest_booking_ids"] = [self.booking.id]
+        session["guest_booking_ids"] = [self.booking.pk]
         session.save()
-        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        response = self.client.post(f"/api/bookings/{self.booking.pk}/cancel/")
         self.assertEqual(response.status_code, 200)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.Status.CANCELED)
 
     def test_other_user_cannot_cancel_booking(self):
         self.client.force_login(self.other)
-        response = self.client.post(f"/api/bookings/{self.booking.id}/cancel/")
+        response = self.client.post(f"/api/bookings/{self.booking.pk}/cancel/")
         self.assertEqual(response.status_code, 403)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.Status.NEW)
@@ -740,7 +740,7 @@ class ReviewTipCancelTests(TestCase):
             "/api/reviews/",
             data=json.dumps(
                 {
-                    "specialist": self.specialist.id,
+                    "specialist": self.specialist.pk,
                     "author_name": "Анна",
                     "rating": 5,
                     "text": "Отлично",
@@ -750,14 +750,14 @@ class ReviewTipCancelTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Review.objects.count(), 1)
-        self.assertEqual(Review.objects.first().specialist_id, self.specialist.id)
+        self.assertEqual(Review.objects.first().specialist_id, self.specialist.pk)
 
     def test_anonymous_cannot_create_review(self):
         response = self.client.post(
             "/api/reviews/",
             data=json.dumps(
                 {
-                    "specialist": self.specialist.id,
+                    "specialist": self.specialist.pk,
                     "author_name": "Анна",
                     "rating": 5,
                     "text": "Отлично",
@@ -777,7 +777,7 @@ class ReviewTipCancelTests(TestCase):
             "/api/reviews/",
             data=json.dumps(
                 {
-                    "specialist": self.specialist.id,
+                    "specialist": self.specialist.pk,
                     "author_name": "Анна",
                     "rating": 5,
                     "text": "Отлично",
@@ -796,7 +796,7 @@ class ReviewTipCancelTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             "/api/tips/",
-            data=json.dumps({"booking_id": self.booking.id, "amount": "150.50"}),
+            data=json.dumps({"booking_id": self.booking.pk, "amount": "150.50"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
@@ -807,7 +807,7 @@ class ReviewTipCancelTests(TestCase):
         self.client.force_login(self.other)
         response = self.client.post(
             "/api/tips/",
-            data=json.dumps({"booking_id": self.booking.id, "amount": "100"}),
+            data=json.dumps({"booking_id": self.booking.pk, "amount": "100"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 403)
@@ -880,9 +880,9 @@ class LandingReviewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Оставить отзыв")
-        self.assertContains(response, f'<option value="{specialist.id}">Активный мастер</option>')
+        self.assertContains(response, f'<option value="{specialist.pk}">Активный мастер</option>')
         self.assertNotContains(
-            response, f'<option value="{inactive.id}">Неактивный мастер</option>'
+            response, f'<option value="{inactive.pk}">Неактивный мастер</option>'
         )
 
 
@@ -951,9 +951,9 @@ class CustomerProfileTests(TestCase):
     def _booking_payload(self, *, name="Анна"):
         end_at = self.start_at + timedelta(minutes=self.procedure.duration_minutes)
         return {
-            "salon": self.salon.id,
-            "procedure": self.procedure.id,
-            "specialist": self.specialist.id,
+            "salon": self.salon.pk,
+            "procedure": self.procedure.pk,
+            "specialist": self.specialist.pk,
             "customer_name": name,
             "phone": "+79990000101",
             "start_at": self.start_at.isoformat(),
@@ -1000,7 +1000,7 @@ class CustomerProfileTests(TestCase):
     def test_service_finally_prefills_guest_name_and_phone(self):
         booking = self._guest_booking()
         session = self.client.session
-        session["guest_booking_ids"] = [booking.id]
+        session["guest_booking_ids"] = [booking.pk]
         session.save()
 
         response = self.client.get("/service-finally/")
@@ -1046,7 +1046,7 @@ class CustomerProfileTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Оставить отзыв")
-        self.assertContains(response, f'<option value="{self.specialist.id}">Мастер</option>')
+        self.assertContains(response, f'<option value="{self.specialist.pk}">Мастер</option>')
 
     def test_profile_updates_name_and_gender(self):
         self.client.force_login(self.user)
