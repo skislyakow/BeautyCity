@@ -170,7 +170,13 @@ class WorkShift(models.Model):
         ordering = ["-date", "start_time"]
         constraints = [
             models.UniqueConstraint(
-                fields=["salon", "specialist", "date", "start_time", "end_time"],
+                fields=[
+                    "salon",
+                    "specialist",
+                    "date",
+                    "start_time",
+                    "end_time",
+                ],
                 name="uniq_shift_exact",
             )
         ]
@@ -208,7 +214,9 @@ class PromoCode(models.Model):
 
 class ConsentDocument(models.Model):
     title = models.CharField(
-        "Название", max_length=200, default="Согласие на обработку персональных данных"
+        "Название",
+        max_length=200,
+        default="Согласие на обработку персональных данных",
     )
     file = models.FileField("PDF файл", upload_to="consents/")
     is_active = models.BooleanField("Активный", default=True)
@@ -239,7 +247,7 @@ class ConsentAcceptance(models.Model):
         ordering = ["-accepted_at"]
 
     def __str__(self):
-        return f"Consent #{self.id} @ {self.accepted_at:%Y-%m-%d %H:%M}"
+        return f"Consent #{self.pk} @ {self.accepted_at:%Y-%m-%d %H:%M}"
 
 
 def record_consent_acceptance(*, user=None, phone="", accepted=True):
@@ -261,7 +269,9 @@ class CustomerProfile(models.Model):
         FEMALE = "female", "Женский"
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
     )
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator], blank=True)
     first_name = models.CharField("Имя", max_length=120, blank=True)
@@ -309,7 +319,11 @@ class Booking(models.Model):
     salon = models.ForeignKey(Salon, on_delete=models.PROTECT, related_name="bookings")
     procedure = models.ForeignKey(Procedure, on_delete=models.PROTECT, related_name="bookings")
     specialist = models.ForeignKey(
-        Specialist, on_delete=models.PROTECT, related_name="bookings", null=True, blank=True
+        Specialist,
+        on_delete=models.PROTECT,
+        related_name="bookings",
+        null=True,
+        blank=True,
     )
 
     customer_name = models.CharField("Имя клиента", max_length=120, blank=True)
