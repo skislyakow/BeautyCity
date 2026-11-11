@@ -801,7 +801,7 @@ class ReviewTipCancelTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Tip.objects.count(), 1)
-        self.assertEqual(Tip.objects.first().amount, Decimal("150.50"))
+        self.assertEqual(Tip.objects.get().amount, Decimal("150.50"))
 
     def test_other_user_cannot_create_tip(self):
         self.client.force_login(self.other)
