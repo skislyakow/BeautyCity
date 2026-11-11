@@ -65,7 +65,7 @@ def _confirm_paid_bookings(payment_id):
         return False
 
     try:
-        paid_amount = Decimal(str(payment.amount.value))
+        paid_amount = Decimal(str(getattr(payment.amount, "value", None)))
     except (AttributeError, InvalidOperation, TypeError, ValueError) as exc:
         logger.warning("Платёж %s: не удалось прочитать сумму (%s)", payment_id, exc)
         return False
