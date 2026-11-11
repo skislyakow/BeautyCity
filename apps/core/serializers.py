@@ -130,7 +130,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             normalized = normalize_phone(data["phone"])
             if normalized:
                 data["phone"] = normalized
-        promo_code_input = data.pop("promo_code", None) or self.initial_data.get("promo_code")
+        initial_data = getattr(self, "initial_data", {})
+        promo_code_input = data.pop("promo_code", None) or initial_data.get("promo_code")
 
         if promo_code_input:
             code = str(promo_code_input).strip().upper()
