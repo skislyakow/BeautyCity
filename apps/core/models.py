@@ -412,6 +412,7 @@ class Tip(models.Model):
         related_name="tips",
         verbose_name="Запись",
     )
+    booking_id: int
     amount = models.DecimalField("Сумма", max_digits=10, decimal_places=2)
     created_at = models.DateTimeField("Создан", auto_now_add=True)
 
