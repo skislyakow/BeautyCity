@@ -750,7 +750,7 @@ class ReviewTipCancelTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Review.objects.count(), 1)
-        self.assertEqual(Review.objects.first().specialist_id, self.specialist.pk)
+        self.assertEqual(Review.objects.get().specialist, self.specialist)
 
     def test_anonymous_cannot_create_review(self):
         response = self.client.post(
