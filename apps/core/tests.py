@@ -9,8 +9,18 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import IntegrityError, OperationalError, close_old_connections, transaction
-from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.db import (
+    IntegrityError,
+    OperationalError,
+    close_old_connections,
+    transaction,
+)
+from django.test import (
+    Client,
+    TestCase,
+    TransactionTestCase,
+    override_settings,
+)
 from django.utils import timezone
 
 from apps.core.management.commands.ensure_admin import (
