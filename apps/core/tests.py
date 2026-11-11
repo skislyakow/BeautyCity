@@ -539,10 +539,10 @@ class BookingCreationTests(TransactionTestCase):
         )
 
         self.assertEqual(response.status_code, 201)
-        booking = Booking.objects.first()
+        booking = Booking.objects.get()
         self.assertEqual(booking.price_original, Decimal("1000.00"))
         self.assertEqual(booking.price_final, Decimal("800.00"))
-        self.assertEqual(booking.promo_code.code, "KID20")
+        self.assertEqual(booking.promo_code, PromoCode.objects.get(code="KID20"))
 
     def test_booking_with_invalid_promo_returns_error(self):
         payload = self._payload()
