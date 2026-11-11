@@ -205,7 +205,7 @@ class YooKassaWebhookTests(TestCase):
 
         response = self.client.get(f"/payment-success/{self.booking.pk}/")
 
-        self.assertEqual(response.url, "/notes/?payment=pending")
+        self.assertEqual(response["Location"], "/notes/?payment=pending")
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.Status.NEW)
 
@@ -345,7 +345,7 @@ class BookingCreationTests(TransactionTestCase):
         response = self.client.get("/notes/")
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/")
+        self.assertEqual(response["Location"], "/")
 
     def test_rejects_overlap_even_if_slot_list_is_stale(self):
         self._create_booking()
@@ -1029,7 +1029,7 @@ class CustomerProfileTests(TestCase):
         response = self.client.get("/profile/")
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/?next=/profile/")
+        self.assertEqual(response["Location"], "/?next=/profile/")
 
     def test_profile_shows_neutral_avatar_by_default(self):
         self.client.force_login(self.user)
