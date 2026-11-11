@@ -1092,7 +1092,7 @@ class DemoAdminTests(TestCase):
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.check_password(ADMIN_PASSWORD))
-        self.assertEqual(user.profile.phone, ADMIN_PHONE)
+        self.assertEqual(CustomerProfile.objects.get(user=user).phone, ADMIN_PHONE)
 
     def test_ensure_demo_admin_is_idempotent(self):
         ensure_demo_admin()
