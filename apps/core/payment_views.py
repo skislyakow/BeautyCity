@@ -146,7 +146,13 @@ def create_payment(request, booking_id):
     booking.payment_id = payment.id or ""
     booking.save()
 
-    return redirect(payment.confirmation.confirmation_url)
+    confirmation = payment.confirmation
+    if confirmation is None:
+        return JsonResponse(
+            {"status": "error", "message": "ЮKassa не вернула ссылку на оплату"},
+            status=502,
+        )
+    return redirect(confirmation.confirmation_url)
 
 
 @csrf_exempt
@@ -219,7 +225,13 @@ def create_bulk_payment(request):
 
     unpaid_bookings.update(payment_id=payment.id or "")
 
-    return redirect(payment.confirmation.confirmation_url)
+    confirmation = payment.confirmation
+    if confirmation is None:
+        return JsonResponse(
+            {"status": "error", "message": "ЮKassa не вернула ссылку на оплату"},
+            status=502,
+        )
+    return redirect(confirmation.confirmation_url)
 
 
 def payment_success(request, booking_id):
