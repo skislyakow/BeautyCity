@@ -143,7 +143,7 @@ def create_payment(request, booking_id):
             {"status": "error", "message": f"Ошибка при создании платежа: {exc}"},
             status=502,
         )
-    booking.payment_id = payment.id
+    booking.payment_id = payment.id or ""
     booking.save()
 
     return redirect(payment.confirmation.confirmation_url)
@@ -217,7 +217,7 @@ def create_bulk_payment(request):
             status=502,
         )
 
-    unpaid_bookings.update(payment_id=payment.id)
+    unpaid_bookings.update(payment_id=payment.id or "")
 
     return redirect(payment.confirmation.confirmation_url)
 
