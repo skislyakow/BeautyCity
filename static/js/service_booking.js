@@ -19,8 +19,6 @@ $(function () {
 		specialist: urlParams.get('specialist'),
 	};
 
-	// находит нужный пункт в уже отрисованном списке и "нажимает" на него —
-	// переиспользует те же обработчики click, что и обычный ручной выбор
 	function triggerSelect($container, id) {
 		if (!id) return false;
 		const $target = $container.find(`[data-id="${id}"]`);
@@ -32,11 +30,11 @@ $(function () {
 	}
 
 	const state = {
-		salon: null,       // {id, name, address}
-		procedure: null,   // {id, title, base_price, duration_minutes}
-		specialist: null,  // {id, full_name, photo, bio}
-		date: null,        // 'YYYY-MM-DD'
-		time: null,        // 'HH:MM'
+		salon: null,
+		procedure: null,
+		specialist: null,
+		date: null,
+		time: null,
 	};
 
 	function fmtPrice(p) {
@@ -48,7 +46,6 @@ $(function () {
 		$btn.next('.panel').removeClass('active');
 	}
 
-	// ---------- Шаг 1: салоны ----------
 	$.get('/api/salons/', function (salons) {
 		const $list = $('#salonsList');
 		$list.empty();
@@ -78,11 +75,9 @@ $(function () {
 			$list.append($item);
 		});
 
-		// -- решаем, какой салон подставить автоматически --
 		if (pending.salon) {
 			triggerSelect($list, pending.salon);
 		} else if (pending.specialist) {
-			// пришли через карточку мастера — узнаём, в каких салонах он работает
 			$.get(`/api/specialists/${pending.specialist}/salons/`, function (specSalons) {
 				if (specSalons.length) {
 					pending.salon = specSalons[0].id;
@@ -90,7 +85,6 @@ $(function () {
 				}
 			});
 		} else if (pending.procedure) {
-			// пришли через карточку услуги — салон явно не указан, берём первый
 			pending.salon = salons[0].id;
 			triggerSelect($list, pending.salon);
 		}
@@ -98,7 +92,6 @@ $(function () {
 		$('#salonsList').html('<p>Не удалось загрузить салоны.</p>');
 	});
 
-	// ---------- Шаг 2: услуги ----------
 	function loadProcedures(salonId) {
 		$('#procedureAccordionBtn').prop('disabled', false).text('(Выберите услугу)');
 		const $list = $('#proceduresList').empty().html('<p class="js-loading">Загрузка услуг...</p>');
@@ -130,14 +123,12 @@ $(function () {
 				$list.append($item);
 			});
 
-			// -- автоподстановка услуги --
 			if (pending.procedure) {
 				triggerSelect($list, pending.procedure);
 				pending.procedure = null;
 			} else if (pending.specialist) {
 				$.get(`/api/specialists/${pending.specialist}/procedures/`, function (specProcedures) {
 					if (!specProcedures.length) return;
-					// предпочитаем ту услугу мастера, которая реально продаётся в этом салоне
 					const offeredIds = offerings.map(o => o.procedure.id);
 					const match = specProcedures.find(p => offeredIds.includes(p.id)) || specProcedures[0];
 					triggerSelect($list, match.id);
@@ -148,7 +139,6 @@ $(function () {
 		});
 	}
 
-	// ---------- Шаг 3: мастера ----------
 	function loadSpecialists(salonId, procedureId) {
 		$('#specialistAccordionBtn').prop('disabled', false).text('(Выберите мастера)');
 		const $list = $('#specialistsList').empty().html('<p class="js-loading">Загрузка мастеров...</p>');
@@ -188,7 +178,6 @@ $(function () {
 				$list.append($item);
 			});
 
-			// -- автоподстановка мастера --
 			if (pending.specialist) {
 				triggerSelect($list, pending.specialist);
 				pending.specialist = null;
@@ -209,7 +198,6 @@ $(function () {
 		$('#timeSlotsContainer').html('<p class="js-loading">Выберите салон, услугу, мастера и дату</p>');
 	}
 
-	// ---------- Шаг 4: календарь ----------
 	function handleDateSelection(dateObj) {
 		if (!dateObj) return;
 		const yyyy = dateObj.getFullYear();

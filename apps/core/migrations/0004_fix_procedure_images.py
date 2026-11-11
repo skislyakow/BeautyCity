@@ -7,10 +7,6 @@ from django.db import migrations
 
 STATIC_IMG_DIR = Path(settings.BASE_DIR) / "static" / "img"
 
-# Соответствие услуг картинкам по дизайну
-# (вёрстка+фронтенд v2/index.html, servicesSlider):
-# service1 = Дневной макияж, service2 = Маникюр, service3 = Укладка волос,
-# service4 = Укладка волос (3 000), service5 = Педикюр, service6 = Окрашивание волос.
 NEW_IMAGE_BY_TITLE = {
     "Окрашивание волос": "services/service6.svg",
     "Укладка волос": "services/service3.svg",

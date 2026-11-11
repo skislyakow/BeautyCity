@@ -9,7 +9,6 @@ ADMIN_PHONE = "+79999999999"
 
 
 def ensure_demo_admin():
-    """Создаёт/обновляет демо-суперпользователя и возвращает (user, created)."""
     user, created = User.objects.get_or_create(
         username=ADMIN_USERNAME,
         defaults={

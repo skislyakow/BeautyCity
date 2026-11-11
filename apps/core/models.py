@@ -18,7 +18,6 @@ phone_validator = RegexValidator(
 
 
 def normalize_phone(phone):
-    """Нормализует телефон к формату +79998887766 (для РФ номеров)."""
     phone = str(phone or "").strip()
     if not phone:
         return ""
@@ -99,10 +98,6 @@ class Procedure(models.Model):
 
 
 class ProcedureOffering(models.Model):
-    """
-    Цена процедуры может отличаться по салонам.
-    """
-
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="offerings")
     procedure = models.ForeignKey(Procedure, on_delete=models.CASCADE, related_name="offerings")
     price = models.DecimalField("Цена в салоне", max_digits=10, decimal_places=2)
@@ -136,8 +131,6 @@ class Specialist(models.Model):
     bio = models.TextField("Специальность", blank=True)
     experience = models.TextField("Стаж работы", blank=True)
     is_active = models.BooleanField("Активен", default=True)
-    # Счётчик используется как блокировка при создании записи: UPDATE строки
-    # сериализует конкурентные запросы к одному мастеру на SQLite и PostgreSQL.
     booking_version = models.PositiveIntegerField("Версия бронирования", default=0, editable=False)
 
     class Meta:
@@ -150,10 +143,6 @@ class Specialist(models.Model):
 
 
 class SpecialistSalon(models.Model):
-    """
-    В каких салонах работает специалист (многие-ко-многим).
-    """
-
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name="salons")
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="specialists")
 
@@ -169,11 +158,6 @@ class SpecialistSalon(models.Model):
 
 
 class WorkShift(models.Model):
-    """
-    Расписание: когда специалист работает в конкретном салоне.
-    По нему можно показывать "какие специалисты когда работают".
-    """
-
     salon = models.ForeignKey(Salon, on_delete=models.CASCADE, related_name="shifts")
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name="shifts")
     date = models.DateField("Дата")
@@ -196,11 +180,6 @@ class WorkShift(models.Model):
 
 
 class PromoCode(models.Model):
-    """
-    Промокоды: kid20 (20%), birthday (15%), man10 (10% в декабре).
-    Правила лучше держать простыми на MVP: процент + период действия + флаг активен.
-    """
-
     code = models.CharField("Промокод", max_length=30, unique=True)
     description = models.CharField("Описание", max_length=300, blank=True)
     discount_percent = models.PositiveSmallIntegerField(
@@ -240,10 +219,6 @@ class ConsentDocument(models.Model):
 
 
 class ConsentAcceptance(models.Model):
-    """
-    Фиксация согласия (для регистрации или оформления записи).
-    """
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -268,7 +243,6 @@ class ConsentAcceptance(models.Model):
 
 
 def record_consent_acceptance(*, user=None, phone="", accepted=True):
-    """Фиксирует факт согласия для активного документа (если он есть)."""
     if not accepted:
         return None
     document = ConsentDocument.objects.filter(is_active=True).order_by("-uploaded_at").first()
@@ -281,10 +255,6 @@ def record_consent_acceptance(*, user=None, phone="", accepted=True):
 
 
 class CustomerProfile(models.Model):
-    """
-    Удобно для подсчёта регистраций и хранения телефона.
-    """
-
     class Gender(models.TextChoices):
         UNKNOWN = "unknown", "Не указан"
         MALE = "male", "Мужской"
@@ -370,8 +340,6 @@ class Booking(models.Model):
             models.Index(fields=["phone", "start_at"]),
         ]
         constraints = [
-            # Защита от точного дубля на уровне БД. Пересечения с разным
-            # началом дополнительно проверяются под блокировкой мастера.
             models.UniqueConstraint(
                 fields=["specialist", "start_at"],
                 condition=~models.Q(status="canceled"),
@@ -382,16 +350,8 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.start_at:%Y-%m-%d %H:%M} — {self.procedure} ({self.salon})"
 
-    @property
-    def discount_percent(self) -> int:
-        if not self.promo_code:
-            return 0
-        return int(self.promo_code.discount_percent)
-
 
 class CallbackRequest(models.Model):
-    """Заявка на обратный звонок (кнопка «Перезвоните мне»)."""
-
     name = models.CharField("Имя", max_length=100, blank=True)
     phone = models.CharField("Телефон", max_length=20, validators=[phone_validator])
     is_processed = models.BooleanField("Обработано", default=False)
@@ -407,8 +367,6 @@ class CallbackRequest(models.Model):
 
 
 class Review(models.Model):
-    """Отзыв клиента о мастере."""
-
     specialist = models.ForeignKey(
         Specialist,
         on_delete=models.CASCADE,
@@ -434,8 +392,6 @@ class Review(models.Model):
 
 
 class Tip(models.Model):
-    """Чаевые мастеру по записи."""
-
     booking = models.ForeignKey(
         Booking,
         on_delete=models.CASCADE,

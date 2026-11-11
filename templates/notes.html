@@ -12,7 +12,6 @@
           {% include "partials/_account_sidebar.html" with active="notes" %}
         </div>
 
-        <!-- Основной контент с записями -->
         <div class="col-md-12 col-lg-7">
           <div class="notes__main">
             <div class="notes__title">Мои записи</div>
@@ -26,7 +25,6 @@
           </div>
           {% endif %}
 
-          <!-- Блок оплаты для мобильных устройств -->
           <div class="notes__pay mob">
             <div class="notes__pay_block">
               <div class="notes__pay_title">Оплата услуг</div>
@@ -44,7 +42,6 @@
             </div>
           </div>
 
-          <!-- ПРЕДСТОЯЩИЕ ЗАПИСИ -->
           <div class="notes__content notes__content_upcoming">
             <div class="notes__main_title">ПРЕДСТОЯЩИЕ</div>
 
@@ -55,7 +52,6 @@
             {% endfor %}
           </div>
 
-          <!-- ПРОШЕДШИЕ ЗАПИСИ -->
           <div class="notes__content notes__content_history">
             <div class="notes__main_title">ПРОШЕДШИЕ</div>
 

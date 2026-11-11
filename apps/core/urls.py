@@ -18,13 +18,11 @@ urlpatterns = [
     path("dashboard/", views.admin_panel, name="admin"),
     path("admin-panel/", views.admin_panel, name="admin_panel"),
     path("pay-all-unpaid/", create_bulk_payment, name="pay_all_unpaid"),
-    # Авторизация по телефону (SMS-код заглушка 1234)
     path("phone-login/", phone_auth.phone_login_view, name="phone_login"),
     path("phone-confirm/", phone_auth.phone_confirm_view, name="phone_confirm"),
     path("logout/", phone_auth.logout_view, name="logout"),
     path("callback/", views.callback_request, name="callback"),
     path("callback/<int:pk>/done/", views.callback_done, name="callback_done"),
-    # API
     path("api/salons/", views.salon_list, name="api_salons"),
     path("api/procedures/", views.procedure_list, name="api_procedures"),
     path("api/specialists/", views.specialist_list, name="api_specialists"),

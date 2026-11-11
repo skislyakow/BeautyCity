@@ -8,14 +8,6 @@ SLOT_STEP_MINUTES = 30
 
 
 def get_available_slots(*, salon, specialist, procedure, date):
-    """
-    Возвращает список доступных времен (time) для:
-    - салона
-    - мастера
-    - процедуры
-    - конкретной даты
-    """
-
     shifts = WorkShift.objects.filter(
         salon=salon,
         specialist=specialist,
@@ -73,7 +65,6 @@ def get_available_slots(*, salon, specialist, procedure, date):
 
 
 def is_slot_available(*, specialist, start_at, end_at):
-    """Проверяет, что у мастера нет активной записи, пересекающейся по времени."""
     return not (
         Booking.objects.filter(
             specialist=specialist,

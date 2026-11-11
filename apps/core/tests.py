@@ -491,8 +491,6 @@ class BookingCreationTests(TransactionTestCase):
             finally:
                 close_old_connections()
 
-        # Обе заявки проходят валидацию по устаревшему списку слотов;
-        # блокировка мастера должна пропустить только одну.
         with (
             patch(
                 "apps.core.serializers.get_available_slots",

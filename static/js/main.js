@@ -1,5 +1,4 @@
 $(document).ready(function() {
-	// 1. Слайдеры
 	$('.salonsSlider').slick({
 		arrows: true,
 		slidesToShow: 3,
@@ -105,7 +104,6 @@ $(document).ready(function() {
 		]
 	});
 
-	// 2. Мобильное меню
 	$('.header__mobMenu').click(function() {
 		$('#mobMenu').show();
 	});
@@ -126,7 +124,6 @@ $(document).ready(function() {
 		});
 	}
 
-	// 5. Попапы / Модальные окна
 	$('.authTriggerBtn').click(function(e) {
 		e.preventDefault();
 		$('#authModal').arcticmodal();
@@ -152,11 +149,6 @@ $(document).ready(function() {
 		sessionStorage.removeItem('openReviewAfterAuth');
 		openReviewModal('');
 	}
-
-	$('.payPopupOpen').click(function(e) {
-		e.preventDefault();
-		$('#paymentModal').arcticmodal();
-	});
 
 	$('.tipsPopupOpen').click(function(e) {
 		e.preventDefault();

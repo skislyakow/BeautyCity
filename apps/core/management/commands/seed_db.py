@@ -53,9 +53,6 @@ SALONS = [
     },
 ]
 
-# Картинки услуг по дизайну (вёрстка+фронтенд v2/index.html, servicesSlider):
-# service1 = Дневной макияж, service2 = Маникюр, service3 = Укладка волос,
-# service4 = Укладка волос (3 000), service5 = Педикюр, service6 = Окрашивание волос.
 PROCEDURES = [
     {
         "title": "Окрашивание волос",
@@ -116,7 +113,6 @@ PROCEDURES = [
 ]
 
 SPECIALISTS = [
-    # Пушкинская (avatar 1-6)
     {
         "full_name": "Елизавета Лапина",
         "bio": "Мастер маникюра",
@@ -165,7 +161,6 @@ SPECIALISTS = [
         "avatar": "masters/avatar/pushkinskaya/6.svg",
         "procedure_titles": ["Дневной макияж", "Вечерний макияж"],
     },
-    # Ленина (avatar 1-6)
     {
         "full_name": "Дарья Мартынова",
         "bio": "Мастер маникюра",
@@ -214,7 +209,6 @@ SPECIALISTS = [
         "avatar": "masters/avatar/lenina/6.svg",
         "procedure_titles": ["Дневной макияж", "Вечерний макияж"],
     },
-    # Красная (avatar 1-6)
     {
         "full_name": "Зоя Матвеева",
         "bio": "Универсал",
@@ -319,7 +313,6 @@ REVIEW_TEXTS = [
 
 
 def _assign_image(obj, field_name, rel_path):
-    """Копирует картинку из static/img в media и заполняет поле, если оно пустое."""
     field = getattr(obj, field_name)
     if field and field.name:
         return
@@ -476,7 +469,7 @@ def seed_promocodes():
 def seed_reviews(specialists):
     created = 0
     for i, specialist in enumerate(specialists):
-        count = 3 + (i % 5)  # от 3 до 7 отзывов на мастера
+        count = 3 + (i % 5)
         for j in range(count):
             author = REVIEW_AUTHORS[(i * 3 + j) % len(REVIEW_AUTHORS)]
             if (i + j) % 7 == 0:

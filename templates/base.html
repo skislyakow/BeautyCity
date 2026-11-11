@@ -34,11 +34,9 @@
 	{% include 'partials/_auth_modal.html' %}
 	{% include 'partials/_confirm_modal.html' %}
 	{% include 'partials/_callback_modal.html' %}
-	{% include 'partials/_payment_modal.html' %}
 	{% include 'partials/_tips_modal.html' %}
 	{% include 'partials/_review_modal.html' %}
 
-	{# гарантирует установку csrftoken-куки даже на страницах без обычных форм — нужна для AJAX/fetch POST-запросов #}
 	{% csrf_token %}
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>

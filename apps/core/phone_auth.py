@@ -17,14 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 def get_user_phone(user):
-    """Телефон пользователя: профиль, затем username для старых phone-аккаунтов."""
     profile = getattr(user, "profile", None)
     phone = ((profile.phone if profile else "") or user.username or "").strip()
     return normalize_phone(phone) or phone
 
 
 def get_guest_booking_ids(request):
-    """ID записей, созданных в текущей сессии без входа в аккаунт."""
     raw = request.session.get("guest_booking_ids", [])
     if not isinstance(raw, list):
         return []
@@ -112,7 +110,6 @@ def phone_confirm_view(request):
 
 
 def login_by_phone(request, phone):
-    """Вход по номеру телефона после успешной проверки SMS-кода."""
     phone = normalize_phone(phone)
 
     profile = CustomerProfile.objects.filter(phone=phone).select_related("user").first()

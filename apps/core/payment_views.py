@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class PaymentVerificationError(Exception):
-    """Не удалось проверить платёж в ЮKassa."""
+    pass
 
 
 def _configure_yookassa():
@@ -43,7 +43,6 @@ def _find_payment(payment_id):
 
 
 def _metadata_matches(payment, bookings):
-    """Сверяет metadata платежа с записями, если metadata есть."""
     metadata = getattr(payment, "metadata", None) or {}
     if not isinstance(metadata, dict):
         return False
@@ -57,12 +56,10 @@ def _metadata_matches(payment, bookings):
         return expected == actual
     if booking_id is not None:
         return {str(booking_id)} == actual
-    # Старые платежи создавались без metadata — для них достаточно сверки суммы.
     return True
 
 
 def _confirm_paid_bookings(payment_id):
-    """Проверяет платёж через API ЮKassa и подтверждает связанные записи."""
     payment = _find_payment(payment_id)
     if getattr(payment, "status", None) != "succeeded":
         return False
@@ -106,7 +103,6 @@ def _confirm_paid_bookings(payment_id):
 
 
 def has_booking_access(request, booking):
-    """Доступ к записи: владелец по телефону или гостевая сессия после записи."""
     if request.user.is_authenticated and get_user_phone(request.user) == booking.phone:
         return True
     return booking.id in get_guest_booking_ids(request)
@@ -156,10 +152,6 @@ def create_payment(request, booking_id):
 @csrf_exempt
 @require_POST
 def yookassa_webhook(request):
-    """Уведомление ЮKassa.
-
-    Телу запроса не доверяем: статус и сумму перепроверяем через API ЮKassa.
-    """
     try:
         data = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
@@ -173,7 +165,6 @@ def yookassa_webhook(request):
     if not payment_id:
         return JsonResponse({"error": "payment id required"}, status=400)
 
-    # Не дёргаем API ЮKassa для платежей, которых нет в нашей базе.
     if not Booking.objects.filter(payment_id=payment_id).exists():
         return JsonResponse({"status": "ignored"})
 
@@ -204,8 +195,6 @@ def create_bulk_payment(request):
             status=400,
         )
 
-    # id записей известны ЗАРАНЕЕ, до создания платежа (в отличие от payment.id) —
-    # поэтому именно их и кладём в return_url
     booking_ids = list(unpaid_bookings.values_list("id", flat=True))
     total_amount = sum(b.price_final for b in unpaid_bookings)
 
@@ -234,7 +223,6 @@ def create_bulk_payment(request):
 
 
 def payment_success(request, booking_id):
-    """Возврат с одиночной оплаты: подтверждаем только после проверки в ЮKassa."""
     booking = get_object_or_404(Booking, id=booking_id)
 
     if booking.status != Booking.Status.CONFIRMED and booking.payment_id:
@@ -248,7 +236,6 @@ def payment_success(request, booking_id):
 
 
 def payment_success_bulk(request):
-    """Возврат с массовой оплаты: подтверждаем только после проверки в ЮKassa."""
     ids_param = request.GET.get("booking_ids", "")
     try:
         booking_ids = [int(x) for x in ids_param.split(",") if x]

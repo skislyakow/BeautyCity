@@ -12,7 +12,6 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# В проекте нет отдельной страницы логина: вход выполняется через SMS-модалку.
 LOGIN_URL = "index"
 
 INSTALLED_APPS = [

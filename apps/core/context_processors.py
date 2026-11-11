@@ -5,7 +5,6 @@ from .phone_auth import get_user_phone
 
 
 def account_name(request):
-    """Имя и аватар клиента для шапки и личного кабинета."""
     user = request.user
     default_avatar = static("img/avatars/user.svg")
     if not user.is_authenticated:

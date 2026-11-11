@@ -242,7 +242,6 @@ $(function () {
 		return n + ' отзывов';
 	}
 
-	// --- Салоны ---
 	$.get('/api/salons/', function (salons) {
 		const $container = $('#salonsContainer');
 		prepareSlider($container);
@@ -269,7 +268,6 @@ $(function () {
 		initSalons($container);
 	});
 
-	// --- Услуги ---
 	$.get('/api/procedures/', function (procedures) {
 		const $container = $('#servicesContainer');
 		prepareSlider($container);
@@ -296,7 +294,6 @@ $(function () {
 		initServices($container);
 	});
 
-	// --- Мастера ---
 	$.get('/api/specialists/', function (specialists) {
 		const $container = $('#mastersContainer');
 		prepareSlider($container);
@@ -337,7 +334,6 @@ $(function () {
 		initMasters($container);
 	});
 
-	// --- Контакты: салоны из БД + метки на карте ---
 	function renderContactsLocations(salons) {
 		const $container = $('#contactsLocations');
 		$container.empty();

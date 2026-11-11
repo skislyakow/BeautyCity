@@ -181,17 +181,12 @@ def _create_booking_once(request):
 
     try:
         with transaction.atomic():
-            # UPDATE строки мастера сериализует конкурентные бронирования:
-            # на PostgreSQL это блокировка строки, на SQLite — блокировка записи.
-            # select_for_update() на SQLite не работает, поэтому нужен реальный UPDATE.
             locked = Specialist.objects.filter(pk=specialist.pk).update(
                 booking_version=F("booking_version") + 1
             )
             if not locked:
                 return Response({"error": "Мастер не найден"}, status=400)
 
-            # Повторная проверка уже под блокировкой: между валидацией
-            # сериализатора и этой транзакцией слот мог занять другой запрос.
             if not is_slot_available(specialist=specialist, start_at=start_at, end_at=end_at):
                 return Response({"error": "Время уже занято"}, status=409)
 
@@ -216,8 +211,6 @@ def create_booking(request):
             result = _create_booking_once(request)
             break
         except OperationalError as exc:
-            # SQLite может вернуть блокировку сразу (особенно в shared-cache).
-            # Повторяем запрос: конкурирующая транзакция успеет завершиться.
             if "locked" not in str(exc).lower():
                 raise
             if attempt == 4:
@@ -243,8 +236,6 @@ def create_booking(request):
                 request.user.first_name = booking.customer_name
                 request.user.save(update_fields=["first_name"])
 
-    # Не входим в аккаунт по телефону из формы: код не подтверждён.
-    # Даём текущей сессии доступ только к этой записи.
     guest_booking_ids = get_guest_booking_ids(request)
     if booking.id not in guest_booking_ids:
         guest_booking_ids.append(booking.id)
@@ -391,12 +382,10 @@ def admin_stats(request):
 
 
 def _get_review_specialists():
-    """Активные мастера для выбора в форме отзыва."""
     return Specialist.objects.filter(is_active=True).only("id", "full_name")
 
 
 def index(request):
-    """Главная страница"""
     reviews = (
         Review.objects.exclude(text="").select_related("specialist").order_by("-created_at")[:12]
     )
@@ -411,12 +400,10 @@ def index(request):
 
 
 def service(request):
-    """Страница записи"""
     return render(request, "service.html")
 
 
 def _get_booking_prefill(request):
-    """Имя и телефон для формы записи из профиля или прошлых записей."""
     if request.user.is_authenticated:
         profile = getattr(request.user, "profile", None)
         phone = get_user_phone(request.user)
@@ -450,13 +437,11 @@ def _get_booking_prefill(request):
 
 
 def service_finally(request):
-    """Страница подтверждения записи"""
     return render(request, "serviceFinally.html", _get_booking_prefill(request))
 
 
 @login_required
 def profile_view(request):
-    """Просмотр и редактирование профиля клиента."""
     profile, _ = CustomerProfile.objects.get_or_create(
         user=request.user,
         defaults={"phone": get_user_phone(request.user)},
@@ -538,7 +523,7 @@ def notes(request):
     return render(request, "notes.html", context)
 
 
-@staff_member_required(login_url="/")  # Пускаем только персонал, остальных на главную
+@staff_member_required(login_url="/")
 def admin_panel(request):
     current_date = now()
 
@@ -576,7 +561,6 @@ def admin_panel(request):
 
 @require_POST
 def callback_request(request):
-    """Публичная заявка «Перезвоните мне»."""
     name = request.POST.get("name", "").strip()
     phone = request.POST.get("phone", "").strip()
 
@@ -604,7 +588,6 @@ def callback_request(request):
 @staff_member_required(login_url="/")
 @require_POST
 def callback_done(request, pk):
-    """Пометить заявку обработанной (только для персонала)."""
     request_obj = get_object_or_404(CallbackRequest, pk=pk)
     request_obj.is_processed = True
     request_obj.save(update_fields=["is_processed"])

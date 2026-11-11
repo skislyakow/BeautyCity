@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 
 from apps.core.models import Procedure, Salon, Specialist, SpecialistSalon
 
-# специальность (ключевые слова в bio) -> ключевые слова в названии услуги (Procedure.title)
 SPECIALTY_KEYWORDS = {
     "маникюр": ["маникюр", "педикюр", "ногт"],
     "педикюр": ["маникюр", "педикюр", "ногт"],
