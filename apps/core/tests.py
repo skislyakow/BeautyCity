@@ -1023,7 +1023,7 @@ class CustomerProfileTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         user = User.objects.get(username="+79990000103")
-        self.assertEqual(user.profile.first_name, "Гость")
+        self.assertEqual(CustomerProfile.objects.get(user=user).first_name, "Гость")
 
     def test_profile_requires_authentication(self):
         response = self.client.get("/profile/")
