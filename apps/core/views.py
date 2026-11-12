@@ -281,7 +281,7 @@ def create_review(request):
     text = (request.data.get("text") or request.data.get("comment") or "").strip()
     try:
         rating = int(request.data.get("rating", 5))
-    except TypeError, ValueError:
+    except (TypeError, ValueError):  # fmt: skip
         rating = 5
     rating = max(1, min(5, rating))
     review = Review.objects.create(
