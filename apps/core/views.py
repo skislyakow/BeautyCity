@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 from random import uniform
 from time import sleep
+from typing import cast
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -157,12 +158,13 @@ def _create_booking_once(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=400)
 
-    salon = serializer.validated_data.get("salon")
-    procedure = serializer.validated_data.get("procedure")
-    specialist = serializer.validated_data.get("specialist")
-    start_at = serializer.validated_data.get("start_at")
-    promo = serializer.validated_data.pop("promo_code_obj", None)
-    consent_accepted = serializer.validated_data.pop("consent_accepted", False)
+    validated_data = cast(dict, serializer.validated_data)
+    salon = validated_data["salon"]
+    procedure = validated_data["procedure"]
+    specialist = validated_data["specialist"]
+    start_at = validated_data["start_at"]
+    promo = validated_data.pop("promo_code_obj", None)
+    consent_accepted = validated_data.pop("consent_accepted", False)
 
     offering = ProcedureOffering.objects.filter(salon=salon, procedure=procedure).first()
     if not offering:
@@ -190,11 +192,14 @@ def _create_booking_once(request):
             if not is_slot_available(specialist=specialist, start_at=start_at, end_at=end_at):
                 return Response({"error": "Время уже занято"}, status=409)
 
-            booking = serializer.save(
-                promo_code=promo,
-                price_original=price_original,
-                price_final=price_final,
-                end_at=end_at,
+            booking = cast(
+                Booking,
+                serializer.save(
+                    promo_code=promo,
+                    price_original=price_original,
+                    price_final=price_final,
+                    end_at=end_at,
+                ),
             )
             _record_booking_consent(request, booking, consent_accepted)
     except IntegrityError:
@@ -223,7 +228,7 @@ def create_booking(request):
     if isinstance(result, Response):
         return result
 
-    booking = result
+    booking = cast(Booking, result)
 
     if booking.customer_name:
         request.session["guest_customer_name"] = booking.customer_name
@@ -457,7 +462,7 @@ def profile_view(request):
                 profile.avatar = None
             profile.save()
             new_avatar_name = profile.avatar.name if profile.avatar else ""
-            if old_avatar_name and old_avatar_name != new_avatar_name:
+            if profile.avatar and old_avatar_name and old_avatar_name != new_avatar_name:
                 profile.avatar.storage.delete(old_avatar_name)
             request.user.first_name = profile.first_name
             request.user.save(update_fields=["first_name"])
