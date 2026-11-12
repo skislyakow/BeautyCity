@@ -52,7 +52,6 @@
 ├── static/                         # css, js, img (вёрстка)
 ├── templates/                      # HTML-шаблоны + templates/partials/ (переиспользуемые блоки)
 ├── deploy/                         # конфиги nginx, systemd и скрипт первоначальной настройки VPS
-├── docs/                           # ревью, план работ, инструкции для разработки
 ├── manage.py
 ├── pyproject.toml                  # зависимости и настройки ruff
 ├── uv.lock                         # зафиксированные версии зависимостей
@@ -177,11 +176,6 @@ git checkout main
 git pull origin main
 git branch -d feature/<имя-задачи>
 ```
-
-## 📚 Документация для разработки
-
-- [docs/code-review.md](docs/code-review.md) — результаты ревью проекта и приоритетный план работ.
-- [docs/agent-skills.md](docs/agent-skills.md) — как локально установить скиллы Matt Pocock на новой машине.
 
 ## Цели проекта
 
